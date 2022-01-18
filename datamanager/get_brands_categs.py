@@ -2,12 +2,11 @@ import utils
 import pandas as pd
 import json
 
-config_file = "config.json"
-with open(utils.get_data_path(config_file)) as json_file:
+
+with open(utils.get_brands_data_file()) as json_file:
     BEL_BRANDS = json.load(json_file)
 
-raw_data_file = "test_data.xlsx"
-df_raw = pd.read_excel(utils.get_data_path(raw_data_file), engine="openpyxl")
+df_raw = pd.read_excel(utils.get_raw_data_file(), engine="openpyxl")
 
 MARKET_CATEGORIES = df_raw["Category"].unique()
 MARKET_BRANDS = df_raw["Brand"].unique()
