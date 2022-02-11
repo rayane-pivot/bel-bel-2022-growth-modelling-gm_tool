@@ -7,7 +7,10 @@ class DM_Belgique(DataManager):
     PATH = "../../../../Pivot & Co/Bel 2022 - 1. Growth Modelling/2. Design (Tool)/_Raoul/Belgium_Data.xlsx"
     PATH_TO_DATES = "../../../../Pivot & Co/Bel 2022 - 1. Growth Modelling/2. Design (Tool)/GM_Tool/data/raw_data_minimal.xlsx"
     
-    def open_excel(self):
+    def open_excel(self, path=None):
+        if path:
+            self.df = pd.read_csv(path)
+            return
         # self.PATH=path
         df_preproc = pd.read_excel(self.PATH, sheet_name="total belgium", engine="openpyxl")
         dates = pd.read_excel(self.PATH_TO_DATES, sheet_name="dates", engine="openpyxl")["dates"].values
