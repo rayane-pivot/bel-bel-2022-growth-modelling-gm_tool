@@ -10,7 +10,7 @@ class DataManager():
     
     def open_excel(self, path=None):
         # set self.df as ['Category', 'Sub Category', 'Brand', 'Date', 'Sales in value',
-        #    'Sales in volume', 'ACV Weighted Distribution', 'Price per Volume',
+        #    'Sales in volume', 'Distribution', 'Price per Volume',
         #    'Price without Promo', 'Sales value with Promo',
         #    'Sales volume with Promo']
         #do not use

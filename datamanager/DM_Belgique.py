@@ -25,7 +25,7 @@ class DM_Belgique(DataManager):
             dict_temp["Date"] = dates
             dict_temp["Sales in value"] = row.iloc[3:43].values
             dict_temp["Sales in volume"] = row.iloc[43:83].values
-            dict_temp["ACV Weighted Distribution"] = row.iloc[83:123].values
+            dict_temp["Distribution"] = row.iloc[83:123].values
             dict_temp["Price per Volume"] = row.iloc[123:163].values
             dict_temp["Price without Promo"] = row.iloc[163:203].values
             dict_temp["Sales value with Promo"] = row.iloc[203:243].values

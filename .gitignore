@@ -1,4 +1,4 @@
 *.csv
 *.xls*
 *.pyc
-*.json
+settings.json
