@@ -6,8 +6,8 @@ import json
 from datamanager.DM_Belgique import DM_Belgique
 from model.M_Belgique import M_Belgique
 
-PATH_TO_BRANDS = "/Users/augustecousin/Documents/bel_gm_tool/gm_tool/datamanager/brands.json"
-PATH_TO_DATES = "/Users/augustecousin/Documents/bel_gm_tool/gm_tool/datamanager/dates.json"
+PATH_TO_BRANDS = "/Users/augustecousin/Documents/bel_gm_tool/gm_tool/assets/brands.json"
+PATH_TO_DATES = "/Users/augustecousin/Documents/bel_gm_tool/gm_tool/assets/dates.json"
 PATH_TO_OUTPUTS = "/Users/augustecousin/Documents/bel_gm_tool/gm_tool/view/"
 
 def main():
