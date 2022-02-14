@@ -7,7 +7,10 @@ class DM_Belgique(DataManager):
     PATH = "../../../../Pivot & Co/Bel 2022 - 1. Growth Modelling/2. Design (Tool)/_Raoul/Belgium_Data.xlsx"
     PATH_TO_DATES = "../../../../Pivot & Co/Bel 2022 - 1. Growth Modelling/2. Design (Tool)/GM_Tool/data/raw_data_minimal.xlsx"
     
-    def open_excel(self):
+    def open_excel(self, path=None):
+        if path:
+            self.df = pd.read_csv(path)
+            return
         # self.PATH=path
         df_preproc = pd.read_excel(self.PATH, sheet_name="total belgium", engine="openpyxl")
         dates = pd.read_excel(self.PATH_TO_DATES, sheet_name="dates", engine="openpyxl")["dates"].values
@@ -22,7 +25,7 @@ class DM_Belgique(DataManager):
             dict_temp["Date"] = dates
             dict_temp["Sales in value"] = row.iloc[3:43].values
             dict_temp["Sales in volume"] = row.iloc[43:83].values
-            dict_temp["ACV Weighted Distribution"] = row.iloc[83:123].values
+            dict_temp["Distribution"] = row.iloc[83:123].values
             dict_temp["Price per Volume"] = row.iloc[123:163].values
             dict_temp["Price without Promo"] = row.iloc[163:203].values
             dict_temp["Sales value with Promo"] = row.iloc[203:243].values
