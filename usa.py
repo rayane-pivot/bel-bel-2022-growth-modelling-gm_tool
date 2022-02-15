@@ -1,12 +1,12 @@
 import sys
 #sys.path.insert(0,"../")
-from ..datamanager import utils
+from datamanager import utils
 
 from datamanager.DM_USA import DM_USA
 from model.Model import Model
 
 PATH_TO_BRANDS = utils.get_assets_path("brands.json")
-PATH_TO_OUTPUTS = "../view"
+PATH_TO_OUTPUTS = "view/"
 
 def main():
     data_manager=DM_USA()
