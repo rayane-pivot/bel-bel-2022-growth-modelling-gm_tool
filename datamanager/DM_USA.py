@@ -1,5 +1,5 @@
 import pandas as pd
-import utils
+import datamanager.utils as utils
 import json
 
 from datamanager.DataManager import DataManager
@@ -8,9 +8,9 @@ from datamanager.DataManager import DataManager
 class DM_USA(DataManager):
     """ DataManager for US data"""
 
-    input_xlsx = "Growth Modelling - USA - 2018-2021 - Sell-Out Data (IRI).xlsx"    
-    PATH = utils.get_data_path(input_xlsx)
-
+    input_xlsx = "/Users/augustecousin/Documents/bel_gm_tool/gm_tool/data/Growth Modelling - USA - 2018-2021 - Sell-Out Data (IRI).xlsx"    
+    #PATH = utils.get_data_path(input_xlsx)
+    PATH = input_xlsx
     def open_excel(self):
         
         columns = ["Date", "Category", "Brand", "Sales in value", "Sales in volume", "Distribution", 

@@ -23,6 +23,7 @@ class DM_Belgique(DataManager):
             dict_temp["Sub Category"] = [row["Unnamed: 2"]] * 40
             dict_temp["Brand"] = [row["Unnamed: 3"]] * 40
             dict_temp["Date"] = dates
+            dict_temp["Period"] = [i for i in range(1, 41, 1)]
             dict_temp["Sales in value"] = row.iloc[3:43].values
             dict_temp["Sales in volume"] = row.iloc[43:83].values
             dict_temp["Distribution"] = row.iloc[83:123].values
