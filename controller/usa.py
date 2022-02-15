@@ -1,5 +1,6 @@
 import sys
-sys.path.insert(0,"..")
+#sys.path.insert(0,"../")
+from ..datamanager import utils
 
 from datamanager.DM_USA import DM_USA
 from model.M_USA import M_USA

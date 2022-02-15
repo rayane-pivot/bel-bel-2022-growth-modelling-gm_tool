@@ -12,19 +12,55 @@ class DM_USA(DataManager):
     #PATH = utils.get_data_path(input_xlsx)
     PATH = input_xlsx
     def open_excel(self):
+
+        def replace_strip(brand_name, subcategory_name):
+            '''Function to remove the subcategory name in the brand name'''
+            return brand_name.replace(subcategory_name, '').strip()
         
+        # Initial columns of the dataframe
         columns = ["Date", "Category", "Brand", "Sales in value", "Sales in volume", "Distribution", 
-                   "Price per volume without promo", "Price per volume with promo", "Price per volume"]
+                "Price per volume without promo", "Price per volume with promo", "Price per volume"]
+
+        # Subcategories for each category in the dataset
+        subcategories = {"CLASSIC SPREADS": ["CLASSIC SPREADS"], 
+                        "CREAM CHEESE BLOCKS": ["CREAM CHEESE BLOCKS"], 
+                        "CREAM CHEESE TUBS": ["FLAVORED TUBS", "FLAVORED WHIPPED TUBS", "PLAIN TUBS", "PLAIN WHIPPED TUBS"], 
+                        "ENTERTAINING TRAYS": ["ENTERTAINING TRAYS"], 
+                        "EVERYDAY BLOCKS": ["EVERYDAY BLOCKS"], 
+                        "EVERYDAY SHREDDED & GRATED": ["EVERYDAY GRATED", "EVERYDAY SHREDS"], 
+                        "GOURMET": ["GOURMET BLOCK / WEDGE / ROUND", "GOURMET CRUMBLED", "GOURMET FRESH ITALIAN", "GOURMET SPREADS"], 
+                        "PIMENTO": ["PIMENTO"], 
+                        "RICOTTA AND FARMERS": ["RICOTTA AND FARMERS"], 
+                        'SINGLE SERVE': ['SINGLE SERVE FLAVORED CREAM CHEESE', 'SINGLE SERVE PLAIN CREAM CHEESE'],
+                        'SLICES': ['EVERYDAY SLICES', 'PREMIUM SLICES'],
+                        'SNACK': ['ALL OTHER SNACK CHEESE', 'SNACKING BAR / ROUND', 'SNACKING CRACKER CUTS', 
+                                'SNACKING CUBE', 'SNACKING SPREADS', 'SNACKING STRING & STICK'],
+                        'SNACKING COMBOS': ['ALL OTHER COMBOS', 'CHEESE COMBO WITH FRESH PRODUCE', 
+                                            'CHEESE COMBO WITH MEAT PROTEIN', 'CHEESE DIPPER COMBOS', 'CHEESE SNACKING COMBO']}
+
+        # Initialization of the final dataframe with processed data
         df = pd.DataFrame(columns=columns)
-        
-        for i in range(1, 3):
+
+        # Loop over all sheets of raw excel data (13 categories)
+        for i in range(13, 14):
+            # Read sheet of the category from row 8 (row 1 to 7 are not useful)
             data = pd.read_excel(self.PATH, sheet_name=str(i), engine="openpyxl").iloc[8:, :]
+            # Assign names to columns (except category which does not exist as row in the initial dataset and is added later)
             data.columns = [column for column in columns if column != "Category"]
+            # Get the category name
             category = data["Brand"].iloc[0]
-            category = [category] * data.shape[0]
-            data.insert(1, "Category", category)    
-            df = pd.concat([df, data], ignore_index=True)        
-        
+            # Insert the category column = list of category name x shape of the dataset
+            data.insert(1, "Category", [category] * data.shape[0])    
+            # Change the name of the first line for brand to ALL BRANDS as it is the sum/mean for all brands in the category 
+            data["Brand"] = data["Brand"].apply(lambda x: x if x != category else "ALL BRANDS")
+            # Get the subcategory name for each row and add a corresponding columns
+            data["Sub Category"] = data["Brand"].apply(lambda x: [subcategory for subcategory in subcategories[category] if subcategory in x])
+            data["Sub Category"] = data["Sub Category"].apply(lambda x: x[0] if len(x) > 0 else "ALL SUB CATEGORIES")
+            # Remove subcategory name in brand name 
+            data["Brand"] = data.apply(lambda x: replace_strip(x["Brand"], x["Sub Category"]), axis=1)
+            # Add processed dataset to the final dataframe
+            df = pd.concat([df, data], ignore_index=True)
+            
         df = df[~df["Date"].str.contains("2018-2021")]
         df = df[~df["Brand"].str.contains("All Categories")]
         df["Date"] = pd.to_datetime(df["Date"].apply(lambda x: x[-8:]))
@@ -32,6 +68,6 @@ class DM_USA(DataManager):
         periods["index"] = periods["index"] + 1
         periods = periods.rename(columns={"index": "Period"})
 
-        df = df.merge(periods, on="Date", how="inner")        
-        
+        df = df.merge(periods, on="Date", how="inner")
+
         self.df = df
