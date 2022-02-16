@@ -48,7 +48,7 @@ class Model():
         y_dfs = []
         keys = []
         for year, interval in self.dict_dates.items():
-            if year != '3Y':
+            if year != 'HISTORY':
                 df_concat = pd.DataFrame(columns=indicators)
                 df = self.filter_data(df_full, category="all", brand="all", date_min=interval['Min'], date_max=interval['Max'])
                 for category, group in df.groupby('Category'):

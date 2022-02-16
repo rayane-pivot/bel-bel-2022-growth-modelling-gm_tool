@@ -4,8 +4,8 @@ from datamanager.DataManager import DataManager
 
 class DM_Belgique(DataManager):
     """ DataManager for Belgium data"""
-    PATH = "../../../../Pivot & Co/Bel 2022 - 1. Growth Modelling/2. Design (Tool)/_Raoul/Belgium_Data.xlsx"
-    PATH_TO_DATES = "../../../../Pivot & Co/Bel 2022 - 1. Growth Modelling/2. Design (Tool)/GM_Tool/data/raw_data_minimal.xlsx"
+    PATH = "../../../Pivot & Co/Bel 2022 - 1. Growth Modelling/2. Design (Tool)/_Raoul/Belgium_Data.xlsx"
+    PATH_TO_DATES = "../../../Pivot & Co/Bel 2022 - 1. Growth Modelling/2. Design (Tool)/GM_Tool/data/raw_data_minimal.xlsx"
     
     def open_excel(self, path=None):
         if path:

@@ -42,7 +42,8 @@ class DM_USA(DataManager):
         df = pd.DataFrame(columns=columns)
 
         # Loop over all sheets of raw excel data (13 categories)
-        for i in range(13, 14):
+        for i in range(1, 14):
+            print(f'page {i} / 13')
             # Read sheet of the category from row 8 (row 1 to 7 are not useful)
             data = pd.read_excel(self.PATH, sheet_name=str(i), engine="openpyxl").iloc[8:, :]
             # Assign names to columns (except category which does not exist as row in the initial dataset and is added later)
