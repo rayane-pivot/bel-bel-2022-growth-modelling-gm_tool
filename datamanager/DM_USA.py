@@ -8,7 +8,7 @@ from datamanager.DataManager import DataManager
 class DM_USA(DataManager):
     """ DataManager for US data"""
 
-    input_xlsx = "/Users/augustecousin/Documents/bel_gm_tool/gm_tool/data/Growth Modelling - USA - 2018-2021 - Sell-Out Data (IRI).xlsx"    
+    input_xlsx = "data/Growth Modelling - USA - 2018-2021 - Sell-Out Data (IRI).xlsx"    
     #PATH = utils.get_data_path(input_xlsx)
     PATH = input_xlsx
     def open_excel(self):
@@ -72,3 +72,24 @@ class DM_USA(DataManager):
         df = df.merge(periods, on="Date", how="inner")
 
         self.df = df
+
+    def find_leaders(self):
+        """this function is just a stash for code"""
+        df_leaders['year'] = pd.DatetimeIndex(df_leaders['Date']).year
+        df_leaders = df_leaders[df_leaders.Brand!='ALL BRANDS']
+
+        df_concat = pd.DataFrame(columns=['Brand', 'Sales in volume', 'SHARE'])
+        for name, group in df_leaders.groupby(['year']):
+            if name==2017:
+                continue
+            #display(group)
+            leaders = group.groupby('Brand', as_index=False)['Sales in volume'].agg(sum).sort_values(by='Sales in volume', ascending=False).iloc[:4].reset_index(drop=True)
+            leaders['SHARE']=leaders['Sales in volume']/group['Sales in volume'].sum()*100
+            leaders['Sales in volume'] = leaders['Sales in volume'].apply(lambda x:x/100000)
+            leaders['year']=int(name)
+            df_concat = pd.concat([df_concat, leaders], ignore_index=True)
+            #print(group['Sales in volume'].sum().sort_values(ascending=False))
+
+        #display(df_concat)
+
+        #df_concat.to_excel('assets/cheese_market_leaders_USA.xlsx')

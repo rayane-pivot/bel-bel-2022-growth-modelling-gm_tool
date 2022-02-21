@@ -18,5 +18,11 @@ class DataManager():
         self.df = pd.read_excel(self.PATH, sheet_name="total belgium", engine="openpyxl")
         dates = pd.read_excel(self.PATH_TO_DATES, sheet_name="dates", engine="openpyxl")["dates"].values
 
+    def assert_dataframe():
+        """HERE ASSERT DF COLUMNS NAMES AND TYPES"""
+        """READ IN JSON FILE, colmuns, types, etc"""
+        """assert shape for Category-Sub Category-Brand"""
+        pass
+
 
     

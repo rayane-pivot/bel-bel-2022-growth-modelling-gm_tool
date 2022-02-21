@@ -1,4 +1,5 @@
 *.csv
 *.xls*
 *.pyc
+*.sav
 settings.json

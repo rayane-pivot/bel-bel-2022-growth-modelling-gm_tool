@@ -31,7 +31,7 @@ class Model():
         brand_pos_matrix['CAGR_value']=df_cagr_brand_value
         brand_pos_matrix['Past growth volume']=df_cagr_brand_volume
         brand_pos_matrix = pd.concat([brand_pos_matrix, df_cagr_category_value.T, df_cagr_category_volume.T])
-
+        #brand_pos_matrix = brand_pos_matrix[brand_pos_matrix['Brand'].isin(self.bel_brands)]
         return brand_pos_matrix
     
 
