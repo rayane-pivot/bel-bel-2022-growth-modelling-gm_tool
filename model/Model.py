@@ -78,10 +78,10 @@ class Model():
                     #dict_cat['Leaders'] = np.array2string(group.groupby('Brand')['Sales in value'].sum().sort_values(ascending=False)[:3].index.array)
                     dict_cat['Growth'] = self.compute_growth(df_full, year, category)
                     dict_cat['Count of brands'] = group['Brand'].nunique()
-                    dict_cat['Promotion intensity'] = group['Sales volume with Promo'].sum() / group['Sales in volume'].sum()
+                    dict_cat['Promotion intensity'] = group['Sales volume with promo'].sum() / group['Sales in volume'].sum()
                     dict_cat['Bel brand sales'] = group[group['Brand'].isin(self.bel_brands)]['Sales in volume'].sum()
                     dict_cat['Bel brands market share'] = group[group['Brand'].isin(self.bel_brands)]['Sales in volume'].sum() / group['Sales in volume'].sum() * 100
-                    dict_cat['Average Price'] = group['Price per Volume'].agg('average')
+                    dict_cat['Average Price'] = group['Price per volume'].agg('average')
 
                     df_cat = pd.DataFrame(data=dict_cat, index=[0])
                     df_concat = pd.concat([df_concat, df_cat]) 

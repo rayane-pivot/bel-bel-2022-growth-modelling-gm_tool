@@ -27,10 +27,10 @@ class DM_Belgique(DataManager):
             dict_temp["Sales in value"] = row.iloc[3:43].values
             dict_temp["Sales in volume"] = row.iloc[43:83].values
             dict_temp["Distribution"] = row.iloc[83:123].values
-            dict_temp["Price per Volume"] = row.iloc[123:163].values
-            dict_temp["Price without Promo"] = row.iloc[163:203].values
-            dict_temp["Sales value with Promo"] = row.iloc[203:243].values
-            dict_temp["Sales volume with Promo"] = row.iloc[243:].values
+            dict_temp["Price per volume"] = row.iloc[123:163].values
+            dict_temp["Price without promo"] = row.iloc[163:203].values
+            dict_temp["Sales value with promo"] = row.iloc[203:243].values
+            dict_temp["Sales volume with promo"] = row.iloc[243:].values
             
             df_final = pd.concat([df_final, pd.DataFrame.from_dict(dict_temp)], ignore_index=True)
             
