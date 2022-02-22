@@ -11,7 +11,7 @@ class DataManager():
     
     def __init__(self):
         self.open_excel()
-        self.assert_dataframe()
+        #self.assert_dataframe()
 
     def open_excel(self, path=None):
         # set self.df as ['Category', 'Sub Category', 'Brand', 'Date', 'Sales in value',
