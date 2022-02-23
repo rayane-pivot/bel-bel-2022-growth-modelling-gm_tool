@@ -21,7 +21,8 @@ def main():
         dict_dates = json.load(f)['USA']
     
     data_manager=DM_USA()
-    data_manager.open_excel()
+    #data_manager.open_excel()
+    #data_manager.assert_dataframe()
 
     model = M_USA(bel_brands, dict_dates)
     

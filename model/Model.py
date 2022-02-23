@@ -31,7 +31,7 @@ class Model():
         brand_pos_matrix['CAGR_value']=df_cagr_brand_value
         brand_pos_matrix['Past growth volume']=df_cagr_brand_volume
         brand_pos_matrix = pd.concat([brand_pos_matrix, df_cagr_category_value.T, df_cagr_category_volume.T])
-
+        #brand_pos_matrix = brand_pos_matrix[brand_pos_matrix['Brand'].isin(self.bel_brands)]
         return brand_pos_matrix
     
 
@@ -78,10 +78,10 @@ class Model():
                     #dict_cat['Leaders'] = np.array2string(group.groupby('Brand')['Sales in value'].sum().sort_values(ascending=False)[:3].index.array)
                     dict_cat['Growth'] = self.compute_growth(df_full, year, category)
                     dict_cat['Count of brands'] = group['Brand'].nunique()
-                    dict_cat['Promotion intensity'] = group['Sales volume with Promo'].sum() / group['Sales in volume'].sum()
+                    dict_cat['Promotion intensity'] = group['Sales volume with promo'].sum() / group['Sales in volume'].sum()
                     dict_cat['Bel brand sales'] = group[group['Brand'].isin(self.bel_brands)]['Sales in volume'].sum()
                     dict_cat['Bel brands market share'] = group[group['Brand'].isin(self.bel_brands)]['Sales in volume'].sum() / group['Sales in volume'].sum() * 100
-                    dict_cat['Average Price'] = group['Price per Volume'].agg('average')
+                    dict_cat['Average Price'] = group['Price per volume'].agg('average')
 
                     df_cat = pd.DataFrame(data=dict_cat, index=[0])
                     df_concat = pd.concat([df_concat, df_cat]) 

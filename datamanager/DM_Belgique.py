@@ -1,11 +1,11 @@
 import pandas as pd
-
+import datetime as dt
 from datamanager.DataManager import DataManager
 
 class DM_Belgique(DataManager):
     """ DataManager for Belgium data"""
-    PATH = "../../../Pivot & Co/Bel 2022 - 1. Growth Modelling/2. Design (Tool)/_Raoul/Belgium_Data.xlsx"
-    PATH_TO_DATES = "../../../Pivot & Co/Bel 2022 - 1. Growth Modelling/2. Design (Tool)/GM_Tool/data/raw_data_minimal.xlsx"
+    PATH = "data/Belgium_Data.xlsx"
+    PATH_TO_DATES = "data/raw_data_minimal.xlsx"
     
     def open_excel(self, path=None):
         if path:
@@ -27,16 +27,16 @@ class DM_Belgique(DataManager):
             dict_temp["Sales in value"] = row.iloc[3:43].values
             dict_temp["Sales in volume"] = row.iloc[43:83].values
             dict_temp["Distribution"] = row.iloc[83:123].values
-            dict_temp["Price per Volume"] = row.iloc[123:163].values
-            dict_temp["Price without Promo"] = row.iloc[163:203].values
-            dict_temp["Sales value with Promo"] = row.iloc[203:243].values
-            dict_temp["Sales volume with Promo"] = row.iloc[243:].values
+            dict_temp["Price per volume"] = row.iloc[123:163].values
+            dict_temp["Price without promo"] = row.iloc[163:203].values
+            dict_temp["Sales value with promo"] = row.iloc[203:243].values
+            dict_temp["Sales volume with promo"] = row.iloc[243:].values
             
             df_final = pd.concat([df_final, pd.DataFrame.from_dict(dict_temp)], ignore_index=True)
             
         df_final["Sub Category"] = df_final["Sub Category"].fillna("ALL SUB CATEGORIES") 
         df_final["Brand"] = df_final["Brand"].fillna("ALL BRANDS") 
-        
+        df_final['Date'] = df_final['Date'].apply(lambda x: dt.datetime.strftime(x, "%Y-%m-%d"))
         self.df = df_final
 
     

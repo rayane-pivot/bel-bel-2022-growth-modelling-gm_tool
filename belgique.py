@@ -16,7 +16,8 @@ def main():
         dict_dates = json.load(f)['BELGIUM']
 
     data_manager=DM_Belgique()
-    data_manager.open_excel()
+    #data_manager.open_excel()
+    #data_manager.assert_dataframe()
 
     model = M_Belgique(bel_brands, dict_dates)
     

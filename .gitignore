@@ -1,4 +1,7 @@
 *.csv
 *.xls*
 *.pyc
+*.sav
+*.txt
+*.pkl
 settings.json
