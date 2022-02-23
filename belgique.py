@@ -15,7 +15,7 @@ def main():
     with open(PATH_TO_DATES, 'r') as f:
         dict_dates = json.load(f)['BELGIUM']
 
-    data_manager=DM_Belgique()
+    data_manager=DM_Belgique(bel_brands)
     #data_manager.open_excel()
     #data_manager.assert_dataframe()
 
