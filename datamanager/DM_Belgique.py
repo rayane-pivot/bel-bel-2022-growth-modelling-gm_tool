@@ -1,5 +1,5 @@
 import pandas as pd
-
+import datetime as dt
 from datamanager.DataManager import DataManager
 
 class DM_Belgique(DataManager):
@@ -36,7 +36,7 @@ class DM_Belgique(DataManager):
             
         df_final["Sub Category"] = df_final["Sub Category"].fillna("ALL SUB CATEGORIES") 
         df_final["Brand"] = df_final["Brand"].fillna("ALL BRANDS") 
-        
+        df_final['Date'] = df_final['Date'].apply(lambda x: dt.datetime.strftime(x, "%Y-%m-%d"))
         self.df = df_final
 
     

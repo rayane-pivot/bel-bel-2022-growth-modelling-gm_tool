@@ -2,7 +2,7 @@
     [
     {"column": "Sub Category", "type": "str"}, 
     {"column": "Brand", "type": "str"},
-    {"column": "Date", "type": "datetime.date"},
+    {"column": "Date", "type": "str"},
     {"column": "Sales in value", "type": "numbers.Number"},
     {"column": "Sales in volume", "type": "numbers.Number"},
     {"column": "Distribution", "type": "numbers.Number"},

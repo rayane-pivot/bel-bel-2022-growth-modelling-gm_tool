@@ -11,7 +11,7 @@ class DataManager():
     
     def __init__(self):
         self.open_excel()
-        #self.assert_dataframe()
+        self.assert_dataframe()
 
     def open_excel(self, path=None):
         # set self.df as ['Category', 'Sub Category', 'Brand', 'Date', 'Sales in value',
@@ -34,6 +34,8 @@ class DataManager():
             assert col["column"] in self.df.columns, f'Column not found: {col["column"]}'
             var_type = locate(col['type'])
             assert isinstance(self.df[col["column"]][0], var_type), f'Column {col["column"]} of type {type(self.df[col["column"]][0])} is not of type {var_type}'
+        
+        print('columns and types are correct')
     
 
 
