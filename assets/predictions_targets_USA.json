@@ -1,0 +1,28 @@
+{
+    "targets" : [
+        {   
+            "Brand" : "THE LAUGHING COW",
+            "Category" : "CLASSIC SPREADS",
+            "Sub Category" : "CLASSIC SPREADS",
+            "Number of Categories" : 2.0,
+            "Number of Sub Categories" : 2.0,
+            "Date" : "2021-04-01",
+            "Period" : 1,
+            "Distribution" : 3.73,
+            "Price per volume" : 8.69,
+            "Price per volume without promo" : 9
+        },
+        {   
+            "Brand" : "THE LAUGHING COW",
+            "Category" : "GOURMET",
+            "Sub Category" : "GOURMET CRUMBLED",
+            "Number of Categories" : 1.0,
+            "Number of Sub Categories" : 4.0,
+            "Date" : "2021-04-01",
+            "Period" : 1,
+            "Distribution" : 8,
+            "Price per volume" : 12,
+            "Price per volume without promo" : 12.5
+        }
+    ]
+}

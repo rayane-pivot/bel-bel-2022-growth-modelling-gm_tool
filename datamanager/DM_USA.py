@@ -1,6 +1,7 @@
 import pandas as pd
 import datamanager.utils as utils
 import json
+import datetime as dt
 
 from datamanager.DataManager import DataManager
 #from DataManager import DataManager
@@ -8,10 +9,42 @@ from datamanager.DataManager import DataManager
 class DM_USA(DataManager):
     """ DataManager for US data"""
 
-    input_xlsx = "/Users/augustecousin/Documents/bel_gm_tool/gm_tool/data/Growth Modelling - USA - 2018-2021 - Sell-Out Data (IRI).xlsx"    
+    input_xlsx = "data/Growth Modelling - USA - 2018-2021 - Sell-Out Data (IRI).xlsx"    
     #PATH = utils.get_data_path(input_xlsx)
     PATH = input_xlsx
+
     def open_excel(self):
+        df_concat = pd.DataFrame()
+        for page in range(1, 15):
+            print(f'page {page}/14')
+            df_sell = pd.read_excel(self.input_xlsx, header=7, sheet_name=str(page))
+            if page==14:
+                df_sell["SEGMENT_PRIBEL  [ SEGMENT_PRIBEL ]"]='PLANT BASED'
+                df_sell["SUB SEGMENT_PRIBEL  [ SUB SEGMENT_PRIBEL ]"]='PLANT BASED'
+            df_concat = pd.concat([df_concat, df_sell])
+
+        df_concat = df_concat.rename(columns={
+            'Time':'Date', 
+            "SEGMENT_PRIBEL  [ SEGMENT_PRIBEL ]":'Category',
+            "SUB SEGMENT_PRIBEL  [ SUB SEGMENT_PRIBEL ]":'Sub Category',
+            "MAJOR BRAND_PRIBEL  [ MAJOR BRAND_PRIBEL ]":'Brand',
+            'Dollar Sales':'Sales in value',
+            'Volume Sales' : 'Sales in volume',
+            'Total Points of Distribution' : 'Distribution',
+            'Price per Volume' : 'Price per volume',
+            'Price per Volume No Merch' : 'Price without promo',
+            'Incremental Dollars' : 'Sales value with promo',
+            'Incremental Volume' : 'Sales volume with promo'
+        })
+        df_concat = df_concat[~df_concat['Date'].str.contains('OK')]
+        df_concat['Date'] = df_concat['Date'].apply(lambda x:dt.datetime.strptime(x.split()[-1], '%m-%d-%y').strftime('%Y-%m-%d'))
+
+        df_concat = df_concat[['Date', 'Category', 'Sub Category', 'Brand', 'Sales in value', 'Sales in volume', 'Distribution', 'Price per volume', 'Price without promo', 'Sales value with promo', 'Sales volume with promo']]
+        df_concat = df_concat.reset_index(drop=True)
+        self.df = df_concat
+
+
+    def open_excel_old(self):
 
         def replace_strip(brand_name, subcategory_name):
             '''Function to remove the subcategory name in the brand name'''
@@ -72,3 +105,24 @@ class DM_USA(DataManager):
         df = df.merge(periods, on="Date", how="inner")
 
         self.df = df
+
+    def find_leaders(self):
+        """this function is just a stash for code"""
+        df_leaders['year'] = pd.DatetimeIndex(df_leaders['Date']).year
+        df_leaders = df_leaders[df_leaders.Brand!='ALL BRANDS']
+
+        df_concat = pd.DataFrame(columns=['Brand', 'Sales in volume', 'SHARE'])
+        for name, group in df_leaders.groupby(['year']):
+            if name==2017:
+                continue
+            #display(group)
+            leaders = group.groupby('Brand', as_index=False)['Sales in volume'].agg(sum).sort_values(by='Sales in volume', ascending=False).iloc[:4].reset_index(drop=True)
+            leaders['SHARE']=leaders['Sales in volume']/group['Sales in volume'].sum()*100
+            leaders['Sales in volume'] = leaders['Sales in volume'].apply(lambda x:x/100000)
+            leaders['year']=int(name)
+            df_concat = pd.concat([df_concat, leaders], ignore_index=True)
+            #print(group['Sales in volume'].sum().sort_values(ascending=False))
+
+        #display(df_concat)
+
+        #df_concat.to_excel('assets/cheese_market_leaders_USA.xlsx')
