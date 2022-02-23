@@ -4,7 +4,7 @@ import pandas as pd
 class M_USA(Model):
     """extended class Model for Belgique"""
     
-    def compute_market_passeport(self, df_full):
+    def compute_market_passeport_old(self, df_full):
         brands_to_remove = ["ALL BRANDS"]#, "ZZ OTHERS", "SS.MARQUE", "UNBRANDED", "PL"
         
         indicators = ['Category', 'Size', 'Count of Competitors', 'L1 Brand', 'L1 Sales', 'L1 Share', 

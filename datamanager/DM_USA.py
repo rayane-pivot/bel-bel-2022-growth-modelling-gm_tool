@@ -9,9 +9,13 @@ from datamanager.DataManager import DataManager
 class DM_USA(DataManager):
     """ DataManager for US data"""
 
-    input_xlsx = "data/Growth Modelling - USA - 2018-2021 - Sell-Out Data (IRI).xlsx"    
+    input_xlsx = "data/Growth Modelling - USA - 2018-2021 - Sell-Out Data (IRI).xlsx"
     #PATH = utils.get_data_path(input_xlsx)
     PATH = input_xlsx
+
+    PATH_INNO = 'data/Growth Modelling - USA - 2018-2021 - Rate Of Innovation (IRI).xlsx'
+    PATH_AandP = 'data/Growth Modelling - USA - 2018-2021 - Finance Data (SAP - Flux Rio).xlsx'
+    PATH_PROMO_COST = ''
 
     def open_excel(self):
         df_concat = pd.DataFrame()
@@ -105,6 +109,66 @@ class DM_USA(DataManager):
         df = df.merge(periods, on="Date", how="inner")
 
         self.df = df
+
+    def fill_df_bel(self):
+        df_bel = self.df[self.df['Brand'].isin(self.bel_brands)]
+
+        df_bel = self.compute_AandP(df_bel, 'USA', self.PATH_AandP)
+        
+        df_bel = self.compute_Inno(df_bel, self.PATH_INNO)
+        print(df_bel.shape)
+        print(df_bel.columns)
+        print(df_bel.Date.min(), df_bel.Date.max())
+        print(df_bel.Brand.unique())
+
+        df_bel = self.compute_Promo_Cost(df_bel, self.PATH_PROMO_COST)
+        
+        self.df_bel = df_bel
+
+    def compute_Inno(self, df, path, date_begining='2017-12-31'):
+        #load excel file
+        df_ino = pd.read_excel(path, header=7)
+        #rename Brands
+        df_ino = df_ino.rename(columns = {"MAJOR BRAND_PRIBEL  [ MAJOR BRAND_PRIBEL ]":'Brand'})
+        #Remove 'all categories'
+        df_ino = df_ino[~df_ino['Product'].str.contains('ALL CATEGORIES')]
+        #Convert columns names to date format
+        cols = [x for x in df_ino.columns if 'Week' in x]
+        df_ino=df_ino.rename(columns={x:dt.datetime.strftime(dt.datetime.strptime(x.split()[-1], '%m-%d-%y'), '%Y-%m-%d') for x in cols})
+        #remove unwanted columns
+        df_ino = df_ino.drop(columns=['Product', 'Dollar Sales 2018-2021 OK'])
+        #Set concat dataframe
+        df_concat = pd.DataFrame()
+        #for each brand
+        for brand, group in df_ino.groupby(['Brand']):
+            #init df
+            df_merge = pd.DataFrame(index=group.columns.values[:-1])
+            group = group.drop('Brand', axis=1)
+            #Find date of first sale for each product
+            for col in group.T.columns:
+                first_sale = group.T[col][pd.notna(group.T[col])].index.values[0]
+                if first_sale == date_begining:
+                    pass
+                else:
+                    delta = dt.timedelta(weeks=104)
+                    date_end = (dt.datetime.strptime(first_sale, '%Y-%m-%d') + delta).strftime('%Y-%m-%d')                    
+                    df_merge = pd.concat([group.T[[col]].loc[first_sale:date_end], df_merge],axis=1)
+                    
+            df_innovation = pd.DataFrame(df_merge.reset_index().sort_values(by='index').set_index('index').sum(axis=1)).rename(columns={0:'Rate of Innovation'})
+            df_innovation.loc['2015-01-01':'2020-01-01'] = 0.0
+            df_innovation = df_innovation.div(group.T.sum(axis=1), axis=0)
+            df_innovation['Brand'] = brand
+            df_innovation = df_innovation.reset_index().rename(columns={'index':'Date'})
+            df_innovation = df_innovation[df_innovation['Date']!='Brand']
+            df_concat = pd.concat([df_concat, df_innovation])
+        #Merge on input df
+        df = pd.merge(df, df_concat[['Brand', 'Date', 'Rate of Innovation']], on=['Brand', 'Date'], how='left')
+        return df
+
+    def compute_Promo_Cost(self, df, path):
+
+        return df
+
 
     def find_leaders(self):
         """this function is just a stash for code"""
