@@ -46,8 +46,7 @@ class DataManager():
             num_days = sum(1 for x in matrix if x[day_to_count] != 0)
             return num_days
     
-    def compute_AandP(self, df, country, path):
-        print('compute AandP')
+    def compute_AandP(self, country, path):
         #Compute A&P
         df_AP = pd.read_excel(path, header=17)
         #Filter by country
@@ -81,9 +80,7 @@ class DataManager():
             df_concat = pd.concat([df_concat, pd.merge(df_final[df_final.Brand==brand], df_test.reset_index(), on=['Year', 'Month']).rename(columns={'index':'Date'})])
         #Change date type to str
         df_concat['Date'] = df_concat['Date'].apply(lambda x : dt.datetime.strftime(x, "%Y-%m-%d"))
-        #Merge on input df
-        df = pd.merge(df, df_concat[['Brand', 'Date', 'A&P']], on=['Brand', 'Date'], how='left')
-        return df
+        return df_concat[['Brand', 'Date', 'A&P']]
 
     def assert_dataframe(self):
         """HERE ASSERT DF COLUMNS NAMES AND TYPES"""
