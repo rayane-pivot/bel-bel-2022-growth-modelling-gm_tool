@@ -1,6 +1,5 @@
 import pandas as pd
-import datamanager.utils as utils
-import json
+import numpy as np
 import datetime as dt
 
 from datamanager.DataManager import DataManager
@@ -15,7 +14,8 @@ class DM_USA(DataManager):
 
     PATH_INNO = 'data/Growth Modelling - USA - 2018-2021 - Rate Of Innovation (IRI).xlsx'
     PATH_AandP = 'data/Growth Modelling - USA - 2018-2021 - Finance Data (SAP - Flux Rio).xlsx'
-    PATH_PROMO_COST = ''
+    PATH_PROMO_COST = 'data/Growth Modelling - USA - 2019-2021 - Promo Cost (Xtel).xlsx'
+    PATH_HH_INDEX = "data/Growth Modelling - USA - Consumer Panel -US HH penetration GM.xlsx"
 
     def open_excel(self):
         df_concat = pd.DataFrame()
@@ -45,8 +45,136 @@ class DM_USA(DataManager):
 
         df_concat = df_concat[['Date', 'Category', 'Sub Category', 'Brand', 'Sales in value', 'Sales in volume', 'Distribution', 'Price per volume', 'Price without promo', 'Sales value with promo', 'Sales volume with promo']]
         df_concat = df_concat.reset_index(drop=True)
+        df_periods = pd.DataFrame(np.sort(df_concat.Date.unique())).reset_index().rename(columns={'index':'Period', 0:'Date'})
+        df_periods.Period = df_periods.Period + 1
+        df_concat = pd.merge(df_concat, df_periods, on='Date', how='left')
         self.df = df_concat
 
+    def fill_df_bel(self):
+        df_bel = self.df[self.df['Brand'].isin(self.bel_brands)]
+    
+        df_AP = self.compute_AandP('USA', self.PATH_AandP)
+        df_bel = pd.merge(df_bel, df_AP, on=['Brand', 'Date'], how='left')
+    
+        df_inno = self.compute_Inno(self.PATH_INNO)
+        df_bel = pd.merge(df_bel, df_inno, on=['Brand', 'Date'], how='left')
+    
+        df_promocost = self.compute_Promo_Cost(self.PATH_PROMO_COST)
+        df_bel = pd.merge(df_bel, df_promocost, on=['Brand', 'Date'], how='left')
+    
+        df_hh = self.compute_HH_Index(self.PATH_HH_INDEX)
+        df_bel = pd.merge(df_bel, df_hh, on=['Brand', 'Date'], how='left')
+    
+        self.df_bel = df_bel
+        #df_bel.to_excel('assets/df_bel.xlsx')
+
+    def compute_Inno(self, path, date_begining='2017-12-31'):
+        #load excel file
+        df_ino = pd.read_excel(path, header=7)
+        #rename Brands
+        df_ino = df_ino.rename(columns = {"MAJOR BRAND_PRIBEL  [ MAJOR BRAND_PRIBEL ]":'Brand'})
+        #Remove 'all categories'
+        df_ino = df_ino[~df_ino['Product'].str.contains('ALL CATEGORIES')]
+        #Convert columns names to date format
+        cols = [x for x in df_ino.columns if 'Week' in x]
+        df_ino=df_ino.rename(columns={x:dt.datetime.strftime(dt.datetime.strptime(x.split()[-1], '%m-%d-%y'), '%Y-%m-%d') for x in cols})
+        #remove unwanted columns
+        df_ino = df_ino.drop(columns=['Product', 'Dollar Sales 2018-2021 OK'])
+        #Set concat dataframe
+        df_concat = pd.DataFrame()
+        #for each brand
+        for brand, group in df_ino.groupby(['Brand']):
+            #init df
+            df_merge = pd.DataFrame(index=group.columns.values[:-1])
+            group = group.drop('Brand', axis=1)
+            #Find date of first sale for each product
+            for col in group.T.columns:
+                first_sale = group.T[col][pd.notna(group.T[col])].index.values[0]
+                if first_sale == date_begining:
+                    pass
+                else:
+                    delta = dt.timedelta(weeks=104)
+                    date_end = (dt.datetime.strptime(first_sale, '%Y-%m-%d') + delta).strftime('%Y-%m-%d')                    
+                    df_merge = pd.concat([group.T[[col]].loc[first_sale:date_end], df_merge],axis=1)
+                    
+            df_innovation = pd.DataFrame(df_merge.reset_index().sort_values(by='index').set_index('index').sum(axis=1)).rename(columns={0:'Rate of Innovation'})
+            df_innovation.loc['2015-01-01':'2020-01-01'] = 0.0
+            df_innovation = df_innovation.div(group.T.sum(axis=1), axis=0)
+            df_innovation['Brand'] = brand
+            df_innovation = df_innovation.reset_index().rename(columns={'index':'Date'})
+            df_innovation = df_innovation[df_innovation['Date']!='Brand']
+            df_concat = pd.concat([df_concat, df_innovation])
+        
+        return df_concat[['Brand', 'Date', 'Rate of Innovation']]
+
+    def compute_Promo_Cost(self, path):
+        df_promo = pd.read_excel(path, engine="openpyxl")
+        renaming_brands = {'BOURSIN':'BOURSIN', 
+            'Laughing Cow': 'THE LAUGHING COW', 
+            'Mini Babybel': 'BABYBEL', 
+            'Prices': 'PRICES',
+            'Nurishh': 'NURISHH',
+            'Kaukauna': 'KAUKAUNA',
+            'Merkts': 'MERKTS'}
+        features = ['PH3', 'Year', 'Month', 'Week', '09.Promo_OOI_USA', '06.OI_Promo_USA']
+        df_promo_bel = df_promo[df_promo.PH3.isin(renaming_brands.keys())][features]
+        df_promo_refri = df_promo[df_promo.PH3 == 'Refrigerated Spreads']
+        #swap PH3 and PH4 columns (KAUKAUNA and MERKTS)
+        df_promo_refri = df_promo_refri[df_promo_refri.PH4 != 'Owls Nest'].rename(columns={'PH3':'PH4', 'PH4':'PH3'})[features]
+        #concat to have all brands on same columns
+        df_promo_res = pd.concat([df_promo_bel, df_promo_refri])
+        #rename brands
+        df_promo_res['PH3'] = df_promo_res['PH3'].map(renaming_brands)
+        #sum promo columns
+        df_promo_res['Cost'] = df_promo_res[['09.Promo_OOI_USA', '06.OI_Promo_USA']].sum(axis=1)
+        #We want 52 weeks, so we merge week 53 with week 52
+        df_promo_res['Week'] = df_promo_res['Week'].replace({53: 52})
+        #group by ...
+        df_promo_res = df_promo_res.groupby(['PH3', 'Year', 'Week']).agg(np.sum).reset_index()
+        #NURISHH is a special case
+        df_promo_nurishh = df_promo_res[df_promo_res.PH3 == 'NURISHH']
+        df_promo_res = df_promo_res[df_promo_res.PH3 != 'NURISHH']
+        df_promo_res['Date'] = list(pd.date_range(start="2019-01-01", end="2021-12-31", freq='W-SUN').strftime('%Y-%m-%d')) * df_promo_res.PH3.nunique()
+        df_promo_nurishh['Date'] = df_promo_res['Date'][-df_promo_nurishh.shape[0]:].values
+        df_promo_res = pd.concat([df_promo_res, df_promo_nurishh])
+        df_promo_res = df_promo_res.rename(columns={'PH3': 'Brand', 'Cost':'Promo Cost'})[['Brand', 'Promo Cost', 'Date']]
+
+        return df_promo_res
+
+    def compute_HH_Index(self, path):
+        #cut excel file to remove half the columns, keep HH index
+        df_h = pd.read_excel(path, engine="openpyxl", header=8).iloc[:, 1:210]
+        #remove ALL BRANDS
+        df_hh = df_h[df_h["Unnamed: 1"] != "Total All Products"].fillna(0)
+        #group by brand
+        df_hh = df_hh.groupby("Unnamed: 1").agg(np.mean)
+        #create dates
+        df_hh.columns = pd.date_range(start="2018-01-07", end="2021-12-31", freq='W-SUN').strftime('%Y-%m-%d')
+        df_hh = pd.DataFrame(df_hh.stack()).reset_index().rename(columns={'Unnamed: 1': 'Brand', 'level_1': 'Date', 0: 'HH'})
+        #rename brand
+        df_hh['Brand'] = df_hh['Brand'].apply(lambda x: x.strip())
+        return df_hh
+        
+    def find_leaders(self):
+        """this function is just a stash for code"""
+        df_leaders['year'] = pd.DatetimeIndex(df_leaders['Date']).year
+        df_leaders = df_leaders[df_leaders.Brand!='ALL BRANDS']
+
+        df_concat = pd.DataFrame(columns=['Brand', 'Sales in volume', 'SHARE'])
+        for name, group in df_leaders.groupby(['year']):
+            if name==2017:
+                continue
+            #display(group)
+            leaders = group.groupby('Brand', as_index=False)['Sales in volume'].agg(sum).sort_values(by='Sales in volume', ascending=False).iloc[:4].reset_index(drop=True)
+            leaders['SHARE']=leaders['Sales in volume']/group['Sales in volume'].sum()*100
+            leaders['Sales in volume'] = leaders['Sales in volume'].apply(lambda x:x/100000)
+            leaders['year']=int(name)
+            df_concat = pd.concat([df_concat, leaders], ignore_index=True)
+            #print(group['Sales in volume'].sum().sort_values(ascending=False))
+
+        #display(df_concat)
+
+        #df_concat.to_excel('assets/cheese_market_leaders_USA.xlsx')
 
     def open_excel_old(self):
 
@@ -109,84 +237,3 @@ class DM_USA(DataManager):
         df = df.merge(periods, on="Date", how="inner")
 
         self.df = df
-
-    def fill_df_bel(self):
-        df_bel = self.df[self.df['Brand'].isin(self.bel_brands)]
-
-        df_bel = self.compute_AandP(df_bel, 'USA', self.PATH_AandP)
-        
-        df_bel = self.compute_Inno(df_bel, self.PATH_INNO)
-        print(df_bel.shape)
-        print(df_bel.columns)
-        print(df_bel.Date.min(), df_bel.Date.max())
-        print(df_bel.Brand.unique())
-
-        df_bel = self.compute_Promo_Cost(df_bel, self.PATH_PROMO_COST)
-        
-        self.df_bel = df_bel
-
-    def compute_Inno(self, df, path, date_begining='2017-12-31'):
-        #load excel file
-        df_ino = pd.read_excel(path, header=7)
-        #rename Brands
-        df_ino = df_ino.rename(columns = {"MAJOR BRAND_PRIBEL  [ MAJOR BRAND_PRIBEL ]":'Brand'})
-        #Remove 'all categories'
-        df_ino = df_ino[~df_ino['Product'].str.contains('ALL CATEGORIES')]
-        #Convert columns names to date format
-        cols = [x for x in df_ino.columns if 'Week' in x]
-        df_ino=df_ino.rename(columns={x:dt.datetime.strftime(dt.datetime.strptime(x.split()[-1], '%m-%d-%y'), '%Y-%m-%d') for x in cols})
-        #remove unwanted columns
-        df_ino = df_ino.drop(columns=['Product', 'Dollar Sales 2018-2021 OK'])
-        #Set concat dataframe
-        df_concat = pd.DataFrame()
-        #for each brand
-        for brand, group in df_ino.groupby(['Brand']):
-            #init df
-            df_merge = pd.DataFrame(index=group.columns.values[:-1])
-            group = group.drop('Brand', axis=1)
-            #Find date of first sale for each product
-            for col in group.T.columns:
-                first_sale = group.T[col][pd.notna(group.T[col])].index.values[0]
-                if first_sale == date_begining:
-                    pass
-                else:
-                    delta = dt.timedelta(weeks=104)
-                    date_end = (dt.datetime.strptime(first_sale, '%Y-%m-%d') + delta).strftime('%Y-%m-%d')                    
-                    df_merge = pd.concat([group.T[[col]].loc[first_sale:date_end], df_merge],axis=1)
-                    
-            df_innovation = pd.DataFrame(df_merge.reset_index().sort_values(by='index').set_index('index').sum(axis=1)).rename(columns={0:'Rate of Innovation'})
-            df_innovation.loc['2015-01-01':'2020-01-01'] = 0.0
-            df_innovation = df_innovation.div(group.T.sum(axis=1), axis=0)
-            df_innovation['Brand'] = brand
-            df_innovation = df_innovation.reset_index().rename(columns={'index':'Date'})
-            df_innovation = df_innovation[df_innovation['Date']!='Brand']
-            df_concat = pd.concat([df_concat, df_innovation])
-        #Merge on input df
-        df = pd.merge(df, df_concat[['Brand', 'Date', 'Rate of Innovation']], on=['Brand', 'Date'], how='left')
-        return df
-
-    def compute_Promo_Cost(self, df, path):
-
-        return df
-
-
-    def find_leaders(self):
-        """this function is just a stash for code"""
-        df_leaders['year'] = pd.DatetimeIndex(df_leaders['Date']).year
-        df_leaders = df_leaders[df_leaders.Brand!='ALL BRANDS']
-
-        df_concat = pd.DataFrame(columns=['Brand', 'Sales in volume', 'SHARE'])
-        for name, group in df_leaders.groupby(['year']):
-            if name==2017:
-                continue
-            #display(group)
-            leaders = group.groupby('Brand', as_index=False)['Sales in volume'].agg(sum).sort_values(by='Sales in volume', ascending=False).iloc[:4].reset_index(drop=True)
-            leaders['SHARE']=leaders['Sales in volume']/group['Sales in volume'].sum()*100
-            leaders['Sales in volume'] = leaders['Sales in volume'].apply(lambda x:x/100000)
-            leaders['year']=int(name)
-            df_concat = pd.concat([df_concat, leaders], ignore_index=True)
-            #print(group['Sales in volume'].sum().sort_values(ascending=False))
-
-        #display(df_concat)
-
-        #df_concat.to_excel('assets/cheese_market_leaders_USA.xlsx')
