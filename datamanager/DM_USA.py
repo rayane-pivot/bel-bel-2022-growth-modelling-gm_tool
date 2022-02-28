@@ -13,7 +13,7 @@ class DM_USA(DataManager):
     PATH = input_xlsx
 
     PATH_INNO = 'data/Growth Modelling - USA - 2018-2021 - Rate Of Innovation (IRI).xlsx'
-    PATH_AandP = 'data/Growth Modelling - USA - 2018-2021 - Finance Data (SAP - Flux Rio).xlsx'
+    PATH_FINANCE = 'data/Growth Modelling - USA - 2018-2021 - Finance Data (SAP - Flux Rio).xlsx'
     PATH_PROMO_COST = 'data/Growth Modelling - USA - 2019-2021 - Promo Cost (Xtel).xlsx'
     PATH_HH_INDEX = "data/Growth Modelling - USA - Consumer Panel -US HH penetration GM.xlsx"
 
@@ -53,7 +53,7 @@ class DM_USA(DataManager):
     def fill_df_bel(self):
         df_bel = self.df[self.df['Brand'].isin(self.bel_brands)]
     
-        df_AP = self.compute_AandP('USA', self.PATH_AandP)
+        df_AP = self.compute_Finance('USA', self.PATH_FINANCE)
         df_bel = pd.merge(df_bel, df_AP, on=['Brand', 'Date'], how='left')
     
         df_inno = self.compute_Inno(self.PATH_INNO)
