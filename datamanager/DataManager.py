@@ -46,16 +46,28 @@ class DataManager():
             num_days = sum(1 for x in matrix if x[day_to_count] != 0)
             return num_days
     
-    def compute_AandP(self, country, path):
+    def compute_Finance(self, country, path):
         #Compute A&P
         df_AP = pd.read_excel(path, header=17)
         #Filter by country
         df_AP = df_AP[df_AP['MANAGERIAL EPM'] == country]
         #Filter brands for the study
         df_AP = df_AP[df_AP['CODE EPM'].isin(self.aandp_codes)]
-        df_final = df_AP[['YEAR EPM', 'CODE EPM', 'R4100 - ADVERTISING', 'R4200 - PROMOTION - CONSUMERS']]
+        df_final = df_AP[['YEAR EPM', 
+                          'CODE EPM', 
+                          'R4100 - ADVERTISING', 
+                          'R4200 - PROMOTION - CONSUMERS', 
+                          'R1000 - NET SALES', 
+                          'MVC - Margin on variable costs']]
         #Rename columns
-        df_final = df_final.rename(columns={'YEAR EPM':'Year', 'CODE EPM':'Brand', 'R4100 - ADVERTISING':'Advertising', 'R4200 - PROMOTION - CONSUMERS':'Promotion'})
+        df_final = df_final.rename(columns={
+            'YEAR EPM':'Year', 
+            'CODE EPM':'Brand', 
+            'R4100 - ADVERTISING':'Advertising', 
+            'R4200 - PROMOTION - CONSUMERS':'Promotion', 
+            'R1000 - NET SALES':'Sell-in', 
+            'MVC - Margin on variable costs':'MVC'
+            })
         #ABS for Advertising and Promotion
         df_final['Advertising'] = df_final['Advertising'].abs()
         df_final['Promotion'] = df_final['Promotion'].abs()
@@ -68,9 +80,12 @@ class DataManager():
         df_final['Month'] = df_final['Year'].apply(lambda x:int(x[5:8]))
         df_final['Year'] = df_final['Year'].apply(lambda x:int(x[:4]))
         df_final = df_final.fillna(0.0)
-        #Compute A&P per week
+        #Months to week
         df_final['number of weeks'] = df_final.apply(lambda x:self.count_num_sundays_in_month(x.Year, x.Month), axis=1)
         df_final['A&P'] = df_final.apply(lambda x: (x.Advertising + x.Promotion) / x['number of weeks'] * 1000, axis=1)
+        df_final['Sell-in'] = df_final.apply(lambda x: x['Sell-in'] / x['number of weeks'] * 1000, axis=1)
+        df_final['MVC'] = df_final.apply(lambda x: x['MVC'] / x['number of weeks'] * 1000, axis=1)
+        #Duplicate for n weeks
         full_idx = pd.date_range(start='2017-12-31', end='2021-12-26', freq='W')
         df_test = pd.DataFrame(index=full_idx)
         df_test['Year'] = df_test.index.year
@@ -80,7 +95,7 @@ class DataManager():
             df_concat = pd.concat([df_concat, pd.merge(df_final[df_final.Brand==brand], df_test.reset_index(), on=['Year', 'Month']).rename(columns={'index':'Date'})])
         #Change date type to str
         df_concat['Date'] = df_concat['Date'].apply(lambda x : dt.datetime.strftime(x, "%Y-%m-%d"))
-        return df_concat[['Brand', 'Date', 'A&P']]
+        return df_concat[['Brand', 'Date', 'A&P', 'Sell-in', 'MVC']]
 
     def assert_dataframe(self):
         """HERE ASSERT DF COLUMNS NAMES AND TYPES"""
