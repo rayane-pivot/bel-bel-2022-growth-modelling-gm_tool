@@ -18,7 +18,7 @@ class DM_USA(DataManager):
         
         #AD HOC PLANT BASED
         df.loc[df[df['Market'].isin(['PLANT BASED CHEESE', 'PLANT BASED CREAM CHEESE'])].index, 'Category'] = 'PLANT BASED'
-        df.loc[df[df['Market'].isin(['PLANT BASED CHEESE', 'PLANT BASED CREAM CHEESE'])].index, 'Sub Category'] = 'PLANT BASED'
+        # df.loc[df[df['Market'].isin(['PLANT BASED CHEESE', 'PLANT BASED CREAM CHEESE'])].index, 'Sub Category'] = 'PLANT BASED'
         
         #AD HOC CREAM CHEESE
         df.loc[df[df['Sub Category'].isin(['FLAVORED TUBS',
@@ -63,7 +63,7 @@ class DM_USA(DataManager):
         self._df = df
     
     def fill_df_bel(self, json_sell_out_params):
-        assert self._df is not None, 'df is empty, call ad_hoc_USA() or load() first'
+        assert not self._df.empty, 'df is empty, call ad_hoc_USA() or load() first'
         df = self._df.copy()
         df.Date = pd.to_datetime(df.Date)
         df.Date = df.Date.dt.strftime('%Y-%m-%d')
