@@ -1,0 +1,102 @@
+{
+     "USA":{
+         "dict_path" : {
+             "PATH_SALES": {"Total Country":"data/Growth Modelling - USA - 2018-2021 - Sell-Out Data (IRI).xlsx"},
+             "PATH_INNO" : {"Total Country":"data/Growth Modelling - USA - 2018-2021 - Rate Of Innovation (IRI).xlsx"},
+             "PATH_FINANCE" : {"Total Country":"data/Growth Modelling - USA - 2018-2021 - Finance Data (SAP - Flux Rio).xlsx"},
+             "PATH_PROMO_COST" : {"Total Country":"data/Growth Modelling - USA - 2019-2021 - Promo Cost (Xtel).xlsx"},
+             "PATH_HH_INDEX" : {"Total Country":"data/Growth Modelling - USA - Consumer Panel -US HH penetration GM.xlsx"}
+             },
+         "sales_renaming_columns":[
+             "Date",
+             "Product",
+             "Market",     
+             "Category",
+             "Sub Category",        
+             "Brand",
+             "Sales in value",     
+             "Sales value with promo",
+             "Sales in volume",
+             "Sales volume with promo",       
+             "Price without promo",
+             "Price with promo",       
+             "Price per volume",
+             "Distribution"
+             ],
+         "header_lines":[7],
+         "sheet_name":["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"],
+         "drop_levels":0,
+         "bel_brands":["BABYBEL", "THE LAUGHING COW", "BOURSIN", "KAUKAUNA", "MERKTS", "PRICES", "NURISHH"],
+         "dates":{
+             "2018": {"Min": "2018-01-01", "Max": "2019-01-01"},
+             "2019": {"Min": "2019-01-01", "Max": "2020-01-01"}, 
+             "2020": {"Min": "2020-01-01", "Max": "2021-01-01"}, 
+             "2021": {"Min": "2021-01-01", "Max": "2022-01-01"}, 
+             "HISTORY": {"Min": "2018-01-01", "Max": "2022-01-01"}
+             },
+         "dates_finance":{"Min": "2017-12-31", "Max": "2021-12-26"},
+         "A&P_codes":["000BQ - BOURSIN", "000LA - THE LAUGHING COW", "000MB - MINI BABYBEL", "000KC - KAUKAUNA", "000PG - PRICE'S", "000MI - MERKTS", "003NH - NURISHH"],
+         "A&P_columns":["YEAR EPM", "MANAGERIAL EPM", "CODE EPM", "R4100 - ADVERTISING", "R4200 - PROMOTION - CONSUMERS", "R1000 - NET SALES", "MVC - Margin on variable costs"],
+         "finance_renaming_columns":["Year", "Country", "Brand", "Advertising", "Promotion", "Sell-in", "MVC"],
+         "brand_positioning_matrix":{
+             "year1" : 2018,
+             "year2" : 2021,
+             "year_min" : 2018
+         },
+         "Finance":{
+            "header":[17]
+         },
+         "Inno":{
+             "header":[7],
+             "date_beg":"2017-12-31",
+             "innovation_duration":104
+         },
+         "Promo Cost":{
+             "renaming_brands" : {
+                "BOURSIN":"BOURSIN", 
+                "Laughing Cow": "THE LAUGHING COW", 
+                "Mini Babybel": "BABYBEL", 
+                "Prices": "PRICES",
+                "Nurishh": "NURISHH",
+                "Kaukauna": "KAUKAUNA",
+                "Merkts": "MERKTS"
+            },
+            "features": ["PH3", "Year", "Month", "Week", "09.Promo_OOI_USA", "06.OI_Promo_USA"]
+         },
+         "HH Index":{
+             "header":[8]
+         }
+     },
+     "FR":{
+         "_comment":{
+            "Total GMS":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Total GMS.xlsx", 
+            "Proxi":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Proxi.xlsx",
+            "Hard Discount":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Hard Discount.xlsx"
+        },
+         "dict_path" : 
+         {
+             "PATH_SALES":{
+                 "Concepts HMSM":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Concepts HMSM.xlsx",
+                 "Ecommerce":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Ecommerce.xlsx"
+                 }
+         },
+         "renaming_columns":[
+             "Date",
+             "Product",
+             "Category",
+             "Sub Category",
+             "Brand",
+             "Sales in value",
+             "Sales value with promo",
+             "Sales in volume",
+             "Sales volume with promo",
+             "Price with promo",
+             "Price without promo",
+             "Price per volume",
+             "Distribution"
+             ],
+         "header_lines":[7, 8],
+         "sheet_name":["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"],
+         "drop_levels":1
+     }
+ }
