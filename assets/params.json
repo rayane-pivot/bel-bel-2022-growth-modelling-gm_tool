@@ -64,7 +64,19 @@
             "features": ["PH3", "Year", "Month", "Week", "09.Promo_OOI_USA", "06.OI_Promo_USA"]
          },
          "HH Index":{
-             "header":[8]
+            "header":[8]
+         },
+         "brand scorecard":{
+            "date_min":"2017-12-31",
+            "awareness":{
+                "BABYBEL":68.0000,
+                "BOURSIN":29.0000, 
+                "KAUKAUNA":15.0000, 
+                "MERKTS":8.0000, 
+                "NURISHH":6.0000, 
+                "PRICES":7.0000, 
+                "THE LAUGHING COW":72.0000
+            }
          }
      },
      "FR":{

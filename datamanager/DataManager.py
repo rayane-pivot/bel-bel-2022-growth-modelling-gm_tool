@@ -88,9 +88,11 @@ class DataManager():
         print('columns and types are correct')
     
     def get_df(self):
+        assert not self._df.empty, 'df is empty, call ad_hoc_COUNTRY() or load_df() first'
         return self._df
 
     def get_df_bel(self):
+        assert not self._df_bel.empty, 'df_bel is empty, call fill_df_bel() or load_df_bel() first'
         return self._df_bel
 
     def compute_Finance_old(self, json_params, country):
