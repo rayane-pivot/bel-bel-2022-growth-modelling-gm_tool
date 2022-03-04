@@ -18,6 +18,7 @@ class DataManager():
         dict_distrib = dict()
         dict_path = json_sell_out_params.get(country).get('dict_path').get('PATH_SALES')
         for distrib, PATH in dict_path.items():
+            print(f'<open_excel> Loading data from file: {PATH}')
             dict_temp = pd.read_excel(PATH, header=headers, sheet_name=sheet_name)
             dict_distrib[distrib] = dict_temp
         return dict_distrib
@@ -27,6 +28,7 @@ class DataManager():
         df_concat = pd.DataFrame()
         for distrib, dict_df in dict_distrib.items():
             df = pd.concat(dict_df.values(), axis=0)
+            print(f'<fill_df> Size of {distrib} dataframe : {df.shape}')
             if json_sell_out_params.get(country).get('levels'):
                 df.columns = df.columns.droplevel(0)
             df.columns = json_sell_out_params.get(country).get('sales_renaming_columns')
@@ -88,9 +90,11 @@ class DataManager():
         print('columns and types are correct')
     
     def get_df(self):
+        assert not self._df.empty, 'df is empty, call ad_hoc_COUNTRY() or load_df() first'
         return self._df
 
     def get_df_bel(self):
+        assert not self._df_bel.empty, 'df_bel is empty, call fill_df_bel() or load_df_bel() first'
         return self._df_bel
 
     def compute_Finance_old(self, json_params, country):
