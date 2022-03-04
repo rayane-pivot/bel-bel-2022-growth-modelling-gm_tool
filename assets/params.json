@@ -10,16 +10,16 @@
          "sales_renaming_columns":[
              "Date",
              "Product",
-             "Market",     
+             "Market",
              "Category",
-             "Sub Category",        
+             "Sub Category",
              "Brand",
-             "Sales in value",     
+             "Sales in value",
              "Sales value with promo",
              "Sales in volume",
-             "Sales volume with promo",       
+             "Sales volume with promo",
              "Price without promo",
-             "Price with promo",       
+             "Price with promo",
              "Price per volume",
              "Distribution"
              ],
@@ -81,13 +81,13 @@
      },
      "FR":{
          "_comment":{
-            "Total GMS":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Total GMS.xlsx", 
             "Proxi":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Proxi.xlsx",
             "Hard Discount":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Hard Discount.xlsx"
         },
-         "dict_path" : 
+         "dict_path" :
          {
              "PATH_SALES":{
+                 "Total GMS":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Total GMS.xlsx", 
                  "Concepts HMSM":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Concepts HMSM.xlsx",
                  "Ecommerce":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Ecommerce.xlsx"
                  }
@@ -106,7 +106,18 @@
              "Price without promo",
              "Price per volume",
              "Distribution"
-             ],
+        ],
+        "bel_brands": [
+            "APERICUBE",
+            "BOURSIN",
+            "BABYBEL",
+            "LA VACHE QUI RIT",
+            "KIRI",
+            "BOURSIN",
+            "PORT SALUT",
+            "COUSTERON",
+            "NURISHH"
+        ],
          "header_lines":[7, 8],
          "sheet_name":["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"],
          "drop_levels":1
