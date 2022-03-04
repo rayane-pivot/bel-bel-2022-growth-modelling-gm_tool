@@ -18,7 +18,7 @@ class DM_USA(DataManager):
         
         #AD HOC PLANT BASED
         df.loc[df[df['Market'].isin(['PLANT BASED CHEESE', 'PLANT BASED CREAM CHEESE'])].index, 'Category'] = 'PLANT BASED'
-        df.loc[df[df['Market'].isin(['PLANT BASED CHEESE', 'PLANT BASED CREAM CHEESE'])].index, 'Sub Category'] = 'PLANT BASED'
+        # df.loc[df[df['Market'].isin(['PLANT BASED CHEESE', 'PLANT BASED CREAM CHEESE'])].index, 'Sub Category'] = 'PLANT BASED'
         
         #AD HOC CREAM CHEESE
         df.loc[df[df['Sub Category'].isin(['FLAVORED TUBS',
@@ -33,11 +33,11 @@ class DM_USA(DataManager):
         df.loc[df[df['Market'].isin(['CREAM CHEESE'])].index, 'Category'] = 'CREAM CHEESE'
         
         #AD HOC GOURMET
-        df.loc[df[df['Sub Category'].isin(['GOURMET BLOCK / WEDGE / ROUND'])].index, 'Category'] = 'GOURMET BLOCK / WEDGE / ROUND'
-        df.loc[df[df['Sub Category'].isin(['GOURMET CRUMBLED'])].index, 'Category'] = 'GOURMET CRUMBLED'
-        df.loc[df[df['Sub Category'].isin(['GOURMET FRESH ITALIAN'])].index, 'Category'] = 'GOURMET FRESH ITALIAN'
-        df.loc[df[df['Sub Category'].isin(['GOURMET SHREDDED / GRATED'])].index, 'Category'] = 'GOURMET SHREDDED / GRATED'
-        df.loc[df[df['Sub Category'].isin(['GOURMET SPREADS'])].index, 'Category'] = 'GOURMET SPREADS'
+        df.loc[df[(df['Sub Category'].isin(['GOURMET BLOCK / WEDGE / ROUND'])) & (~df['Category'].isin(['PLANT BASED']))].index, 'Category'] = 'GOURMET BLOCK / WEDGE / ROUND'
+        df.loc[df[(df['Sub Category'].isin(['GOURMET CRUMBLED'])) & (~df['Category'].isin(['PLANT BASED']))].index, 'Category'] = 'GOURMET CRUMBLED'
+        df.loc[df[(df['Sub Category'].isin(['GOURMET FRESH ITALIAN'])) & (~df['Category'].isin(['PLANT BASED']))].index, 'Category'] = 'GOURMET FRESH ITALIAN'
+        df.loc[df[(df['Sub Category'].isin(['GOURMET SHREDDED / GRATED'])) & (~df['Category'].isin(['PLANT BASED']))].index, 'Category'] = 'GOURMET SHREDDED / GRATED'
+        df.loc[df[(df['Sub Category'].isin(['GOURMET SPREADS'])) & (~df['Category'].isin(['PLANT BASED']))].index, 'Category'] = 'GOURMET SPREADS'
         
         #AD HOC DROP HYBRID FROM MARKET
         df = df[~df['Market'].isin(['HYBRID CHEESE'])]
@@ -59,11 +59,12 @@ class DM_USA(DataManager):
             'Sales in value', 'Sales value with promo', 'Sales in volume',
             'Sales volume with promo', 'Price without promo',
             'Price with promo', 'Price per volume', 'Distribution'], keep='last')]
+        
         df = df.reset_index(drop=True)
         self._df = df
     
     def fill_df_bel(self, json_sell_out_params):
-        assert self._df is not None, 'df is empty, call ad_hoc_USA() or load() first'
+        assert not self._df.empty, 'df is empty, call ad_hoc_USA() or load() first'
         df = self._df.copy()
         df.Date = pd.to_datetime(df.Date)
         df.Date = df.Date.dt.strftime('%Y-%m-%d')
