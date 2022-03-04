@@ -92,7 +92,7 @@
                  "Ecommerce":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Ecommerce.xlsx"
                  }
          },
-         "renaming_columns":[
+         "sales_renaming_columns":[
              "Date",
              "Product",
              "Category",
