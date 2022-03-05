@@ -49,7 +49,11 @@
          "Inno":{
              "header":[7],
              "date_beg":"2017-12-31",
-             "innovation_duration":104
+             "innovation_duration":104,
+             "brand_column_name" : "MAJOR BRAND_PRIBEL  [ MAJOR BRAND_PRIBEL ]",
+             "week_name" : "Week",
+             "date_format":"%m-%d-%y",
+             "columns_to_remove":["Product", "Dollar Sales 2018-2021 OK"]
          },
          "Promo Cost":{
              "renaming_brands" : {
@@ -82,7 +86,8 @@
      "FR":{
          "_comment":{
             "Proxi":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Proxi.xlsx",
-            "Hard Discount":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Hard Discount.xlsx"
+            "Hard Discount":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Hard Discount.xlsx",
+            "Total Country":"data/France/Growth Modelling - FR - 2019-2021 - Finance Data (SAP - Flux Rio).xlsx"
         },
          "dict_path" :
          {
@@ -90,7 +95,9 @@
                  "Total GMS":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Total GMS.xlsx", 
                  "Concepts HMSM":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Concepts HMSM.xlsx",
                  "Ecommerce":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Ecommerce.xlsx"
-                 }
+                 },
+            "PATH_INNO" : {"Total Country":"data/France/Growth Modelling - FR - 2019-2021 - Rate Of Innovation (IRI).xlsx"},
+            "PATH_FINANCE" : {"Total Country":"data/Growth Modelling - USA - 2018-2021 - Finance Data (SAP - Flux Rio).xlsx"}
          },
          "sales_renaming_columns":[
              "Date",
@@ -113,13 +120,30 @@
             "BABYBEL",
             "LA VACHE QUI RIT",
             "KIRI",
-            "BOURSIN",
             "PORT SALUT",
             "COUSTERON",
             "NURISHH"
         ],
          "header_lines":[7, 8],
          "sheet_name":["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"],
-         "drop_levels":1
+         "date_max":"2022-01-01",
+         "drop_levels":1,
+         "A&P_codes":["000AC - APERICUBE", "000BQ - BOURSIN", "000MB - MINI BABYBEL", "000LA - THE LAUGHING COW", "000KE - KIRI", "000PF - PORT SALUT", "000CJ - COUSTERON", "003NH - NURISHH"],
+         "A&P_columns":["YEAR EPM", "MANAGERIAL EPM", "CODE EPM", "R4100 - ADVERTISING", "R4200 - PROMOTION - CONSUMERS", "R1000 - NET SALES", "MVC - Margin on variable costs"],
+         "finance_renaming_columns":["Year", "Country", "Brand", "Advertising", "Promotion", "Sell-in", "MVC"],
+         "dates_finance":{"Min": "2017-12-31", "Max": "2021-12-26"},
+         "Inno":{
+            "header":[7],
+            "date_beg":"2018-01-07",
+            "innovation_duration":104,
+            "brand_column_name" : "MARQUE_Vue_Principale  [ MARQUE_Vue_Principale ]",
+            "week_name":"Sem",
+            "date_format":"%d-%m-%Y",
+            "columns_to_remove":["Product", "MARCHE_Vue_Principale  [ MARCHE_Vue_Principale ]", "SEGMENT_Vue_Principale  [ SEGMENT_Vue_Principale ]"]
+        },
+        "Finance":{
+            "header":[17],
+            "country_name":"FRANCE COMMERCIAL"
+         }
      }
  }

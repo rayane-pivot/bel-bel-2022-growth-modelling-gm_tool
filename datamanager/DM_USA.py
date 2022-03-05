@@ -86,7 +86,11 @@ class DM_USA(DataManager):
         DATE_BEG = json_sell_out_params.get(self._country).get('Inno').get('date_beg')
         INNO_HEADER = json_sell_out_params.get(self._country).get('Inno').get('header')
         INNOVATION_DURATION = json_sell_out_params.get(self._country).get('Inno').get('innovation_duration')
-        df_inno = self.fill_Inno(path=PATH_INNO, header=INNO_HEADER)
+        INNO_BRAND_COL_NAME =json_sell_out_params.get(self._country).get('Inno').get('brand_column_name')
+        INNO_WEEK_NAME = json_sell_out_params.get(self._country).get('Inno').get('week_name')
+        INNO_COLS_TO_REMOVE = json_sell_out_params.get(self._country).get('Inno').get('columns_to_remove')
+        INNO_DATE_FORMAT = json_sell_out_params.get(self._country).get('Inno').get('date_format')
+        df_inno = self.fill_Inno(path=PATH_INNO, header=INNO_HEADER, brand_column_name=INNO_BRAND_COL_NAME, week_name=INNO_WEEK_NAME, columns_to_remove=INNO_COLS_TO_REMOVE, date_format=INNO_DATE_FORMAT)
         df_inno = self.compute_Inno(df=df_inno, date_begining=DATE_BEG, innovation_duration=INNOVATION_DURATION)
         df_bel = pd.merge(df_bel, df_inno, on=['Brand', 'Date'], how='left')
 
@@ -155,8 +159,8 @@ class DM_USA(DataManager):
                     df_merge = pd.concat([group.T[[col]].loc[first_sale:date_end], df_merge],axis=1)
             #beautiful peace of code here, ask ahmed for details        
             df_innovation = pd.DataFrame(df_merge.reset_index().sort_values(by='index').set_index('index').sum(axis=1)).rename(columns={0:'Rate of Innovation'})
-            date_begining_to_delta = (dt.datetime.strptime(first_sale, '%Y-%m-%d') + delta).strftime('%Y-%m-%d')                    
-            df_innovation.loc[first_sale:date_begining_to_delta] = 0.0
+            date_begining_to_delta = (dt.datetime.strptime(date_begining, '%Y-%m-%d') + delta).strftime('%Y-%m-%d')                    
+            df_innovation.loc[date_begining:date_begining_to_delta] = 0.0
             #divide innovations by total sales
             df_innovation = df_innovation.div(group.T.sum(axis=1), axis=0)
             df_innovation.loc[:, 'Brand'] = brand
