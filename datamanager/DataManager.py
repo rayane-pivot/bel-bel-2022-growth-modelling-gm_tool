@@ -47,18 +47,18 @@ class DataManager():
         df_finance['Year'] = df_finance['Year'].apply(lambda x:int(x[:4]))
         return df_finance
     
-    def fill_Inno(self, path:str, header:list):
+    def fill_Inno(self, path:str, header:list, brand_column_name:str, week_name:str, columns_to_remove:list, date_format:str):
         #Load innovation file and some formating
         df_ino = pd.read_excel(path, header=header)
         #rename Brands
-        df_ino = df_ino.rename(columns = {"MAJOR BRAND_PRIBEL  [ MAJOR BRAND_PRIBEL ]":'Brand'})
+        df_ino = df_ino.rename(columns = {brand_column_name:'Brand'})
         #Remove 'all categories'
         df_ino = df_ino[~df_ino['Product'].str.contains('ALL CATEGORIES')]
         #Convert columns names to date format
-        cols = [x for x in df_ino.columns if 'Week' in x]
-        df_ino=df_ino.rename(columns={x:dt.datetime.strftime(dt.datetime.strptime(x.split()[-1], '%m-%d-%y'), '%Y-%m-%d') for x in cols})
+        cols = [x for x in df_ino.columns if week_name in x]
+        df_ino=df_ino.rename(columns={x:dt.datetime.strftime(dt.datetime.strptime(x.split()[-1], date_format), '%Y-%m-%d') for x in cols})
         #remove unwanted columns
-        df_ino = df_ino.drop(columns=[x for x in df_ino.columns if x in ['Product', 'Dollar Sales 2018-2021 OK']])
+        df_ino = df_ino.drop(columns=[x for x in df_ino.columns if x in columns_to_remove])
         return df_ino
 
     def load(self, path):

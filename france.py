@@ -1,6 +1,6 @@
 import json
 from datamanager.DM_FR import DM_FR
-#from model.M_USA import M_USA
+from model.M_FR import M_FR
 
 PATH_TO_PARAMS = 'assets/params.json'
 PATH_TO_OUTPUTS = "view/"
@@ -20,18 +20,20 @@ def main():
     #data_manager.get_df().to_excel('view/USA_df_postprocessing_0303.xlsx', index=False)
     #data_manager.get_df_bel().to_excel('view/USA_df_bel_0303.xlsx')
     
-    #model = M_USA()
+    model = M_FR()
     
     #print(model.filter_data(data_manager.df))
-    #year1 = json_sell_out_params.get('USA').get('brand_positioning_matrix').get("year1")
-    #year2 = json_sell_out_params.get('USA').get('brand_positioning_matrix').get("year2")
-    #year_min= json_sell_out_params.get('USA').get('brand_positioning_matrix').get("year_min")
+    year1 = json_sell_out_params.get('FR').get('brand_positioning_matrix').get("year1")
+    year2 = json_sell_out_params.get('FR').get('brand_positioning_matrix').get("year2")
+    year_min= json_sell_out_params.get('FR').get('brand_positioning_matrix').get("year_min")
 
-    # brand_positioning_matrix = model.compute_brand_positioning_matrix(data_manager.get_df(), 
-    #                                                                   year_min=year_min, 
-    #                                                                   year1=year1, 
-    #                                                                   year2=year2)
-    # #brand_positioning_matrix.to_excel(PATH_TO_OUTPUTS + 'USA_brand_positioning_matrix_0303.xlsx')
+    for channel, df in data_manager.get_df_channels().items():
+        brand_positioning_matrix = model.compute_brand_positioning_matrix(df, 
+                                                                      year_min=year_min, 
+                                                                      year1=year1, 
+                                                                      year2=year2)
+        
+        brand_positioning_matrix.to_excel(f'view/France/FR_{channel}_brand_positioning_matrix_0703.xlsx')
 
     # brand_scorecard = model.compute_brand_scorecard(data_manager.get_df(), 
     #                                                 data_manager.get_df_bel(), 
