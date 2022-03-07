@@ -5,3 +5,4 @@
 *.txt
 *.pkl
 settings.json
+.ipynb_checkpoints
