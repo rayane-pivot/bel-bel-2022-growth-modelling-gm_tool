@@ -144,6 +144,11 @@
         "Finance":{
             "header":[17],
             "country_name":"FRANCE COMMERCIAL"
-         }
+         },
+         "brand_positioning_matrix":{
+            "year1" : 2019,
+            "year2" : 2021,
+            "year_min" : 2019
+        }
      }
  }

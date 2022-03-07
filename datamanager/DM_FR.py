@@ -10,10 +10,7 @@ class DM_FR(DataManager):
 
     def ad_hoc_FR(self, json_sell_out_params):
         df = super().fill_df(json_sell_out_params, self._country)
-        print("faire DFBEL")
-        """TODO: TOUS LES MUST HAVE : Sub Category shift -> Category, CARE ABOUT PLANT BASED
-        Ajouter la catégorie Plant Based (IRI à alternative végétale)
-        
+        """
         Spécialité : Must have (compétition à valider pour Port Salut et Cousteron)
         Frais à tartiner : Must have
         Enfant : Must have
