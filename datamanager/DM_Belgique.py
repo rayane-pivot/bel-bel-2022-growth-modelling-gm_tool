@@ -2,6 +2,7 @@ import pandas as pd
 import datetime as dt
 from datamanager.DataManager import DataManager
 
+
 class DM_Belgique(DataManager):
     """ DataManager for Belgium data"""
     PATH = "data/Belgium_Data.xlsx"

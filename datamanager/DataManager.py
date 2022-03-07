@@ -20,6 +20,13 @@ class DataManager():
     aandp_codes = []
     
     def __init__(self, bel_brands, aandp_codes):
+        """TODO describe function
+
+        :param bel_brands: 
+        :param aandp_codes: 
+        :returns: 
+
+        """
         self.bel_brands = bel_brands
         self.aandp_codes = aandp_codes
         self.open_excel()
