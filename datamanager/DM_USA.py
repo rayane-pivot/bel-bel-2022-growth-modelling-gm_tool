@@ -24,11 +24,11 @@ class DM_USA(DataManager):
         df.loc[df[df['Sub Category'].isin(['FLAVORED TUBS',
                                         'FLAVORED WHIPPED TUBS', 
                                         'PLAIN TUBS', 
-                                        'PLAIN WHIPPED TUBS'])].index, 'Category'] = 'CREAM CHEESE TUBS'
+                                        'PLAIN WHIPPED TUBS'])].index, 'Sub Category'] = 'CREAM CHEESE TUBS'
         
         df.loc[df[df['Sub Category'].isin(['SINGLE SERVE FLAVORED CREAM CHEESE',
                                         'SINGLE SERVE PLAIN CREAM CHEESE'
-                                        ])].index, 'Category'] = 'SINGLE SERVE'
+                                        ])].index, 'Sub Category'] = 'SINGLE SERVE'
         
         df.loc[df[df['Market'].isin(['CREAM CHEESE'])].index, 'Category'] = 'CREAM CHEESE'
         
