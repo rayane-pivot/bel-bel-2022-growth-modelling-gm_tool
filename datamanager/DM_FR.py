@@ -19,23 +19,23 @@ class DM_FR(DataManager):
 
         df.Date = df.Date.apply(lambda x:dt.datetime.strptime(x[-10:], '%d-%m-%Y').strftime('%Y-%m-%d'))
 
-        #AD HOC SPECIALITE
-        df.loc[df[(df['Sub Category'].isin(['AOR REGIONAL'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'AOR REGIONAL'
-        df.loc[df[(df['Sub Category'].isin(['SPECIALITE A GOUT DOUX'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'SPECIALITE A GOUT DOUX'
+        # #AD HOC SPECIALITE
+        # df.loc[df[(df['Sub Category'].isin(['AOR REGIONAL'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'AOR REGIONAL'
+        # df.loc[df[(df['Sub Category'].isin(['SPECIALITE A GOUT DOUX'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'SPECIALITE A GOUT DOUX'
         
 
-        #AD HOC FRAIS A TARTINER
-        df.loc[df[(df['Sub Category'].isin(['ARO'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'ARO'
-        df.loc[df[(df['Sub Category'].isin(['NATURE'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'NATURE'
+        # #AD HOC FRAIS A TARTINER
+        # df.loc[df[(df['Sub Category'].isin(['ARO'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'ARO'
+        # df.loc[df[(df['Sub Category'].isin(['NATURE'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'NATURE'
         
-        #AD HOC ENFANT
-        df.loc[df[(df['Sub Category'].isin(['A TARTINER'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'A TARTINER'
-        df.loc[df[(df['Sub Category'].isin(['NOMADE'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'NOMADE'
+        # #AD HOC ENFANT
+        # df.loc[df[(df['Sub Category'].isin(['A TARTINER'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'A TARTINER'
+        # df.loc[df[(df['Sub Category'].isin(['NOMADE'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'NOMADE'
 
-        #AD HOC TRANCHE A FROID
-        df.loc[df[(df['Sub Category'].isin(['A GOUT'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'A GOUT'
-        df.loc[df[(df['Sub Category'].isin(['CHEVRE&BREBIS'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'CHEVRE&BREBIS'
-        df.loc[df[(df['Sub Category'].isin(['ORIGINAL'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'ORIGINAL'
+        # #AD HOC TRANCHE A FROID
+        # df.loc[df[(df['Sub Category'].isin(['A GOUT'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'A GOUT'
+        # df.loc[df[(df['Sub Category'].isin(['CHEVRE&BREBIS'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'CHEVRE&BREBIS'
+        # df.loc[df[(df['Sub Category'].isin(['ORIGINAL'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'ORIGINAL'
 
         df = df[df.Date < json_sell_out_params.get(self._country).get('date_max')]
         for channel, group in df.groupby('Channel', as_index=False):
@@ -47,14 +47,12 @@ class DM_FR(DataManager):
         
         for channel, df in self.get_df_channels().items():
             json_sell_out_params = json_sell_out_params.copy()
-            df = self._df.copy()
+            df = df.copy()
             df.Date = pd.to_datetime(df.Date)
             df.Date = df.Date.dt.strftime('%Y-%m-%d')
             bel_brands = json_sell_out_params.get(self._country).get('bel_brands')
             df_bel=df[df.Brand.isin(bel_brands)].groupby(['Date', 'Brand'], as_index=False)[['Price per volume', 'Sales in volume', 'Sales in value', 'Distribution']].agg({'Price per volume':'mean', 'Sales in volume':'sum', 'Sales in value':'sum', 'Distribution':'mean'})
             
-            #TODO: CODE A&P PAREIL QUE POUR USA normalement, a checker
-            #TODO: CARE code for france in FRANCE COMMERCIAL, ignore FRANCE OVERSEES et l'autre
             PATH_FINANCE = json_sell_out_params.get(self._country).get('dict_path').get('PATH_FINANCE').get('Total Country')
             AP_CODES = json_sell_out_params.get(self._country).get('A&P_codes')
             FINANCE_COLS = json_sell_out_params.get(self._country).get('A&P_columns')
@@ -65,9 +63,9 @@ class DM_FR(DataManager):
             COUNTRY_NAME = json_sell_out_params.get(self._country).get('Finance').get('country_name')
             df_finance = self.fill_Finance(path=PATH_FINANCE, finance_cols=FINANCE_COLS, finance_renaming_columns=FINANCE_RENAMING_COLS, header=FINANCE_HEADER)
             df_finance = self.compute_Finance(df_finance, AP_CODES, DATE_MIN, DATE_MAX, country_name=COUNTRY_NAME)
+            df_finance=df_finance.replace("THE LAUGHING COW", "LA VACHE QUI RIT")
             df_bel = pd.merge(df_bel, df_finance, on=['Brand', 'Date'], how='left')
 
-            #TODO: 2 ans pour les innovations pareil.
             PATH_INNO = json_sell_out_params.get(self._country).get('dict_path').get('PATH_INNO').get('Total Country')
             DATE_BEG = json_sell_out_params.get(self._country).get('Inno').get('date_beg')
             INNO_HEADER = json_sell_out_params.get(self._country).get('Inno').get('header')
@@ -149,8 +147,8 @@ class DM_FR(DataManager):
         return self._df_channels
 
     def get_df_by_channel(self, channel):
-        assert channel in self.get_df_by_channels.keys(), f'{channel} not in df_channels'
-        return self.get_df_channels.get(channel)
+        assert channel in self.get_df_channels().keys(), f'{channel} not in df_channels'
+        return self.get_df_channels().get(channel)
     
     def add_df_channel(self, key, df):
         self._df_channels[key] = df
@@ -159,8 +157,8 @@ class DM_FR(DataManager):
         return self._df_bel_channels
 
     def get_df_bel_by_channel(self, channel):
-        assert channel in self.get_df_by_channels.keys(), f'{channel} not in df_channels'
-        return self.get_df_bel_channels.get(channel)
+        assert channel in self.get_df_bel_channels().keys(), f'{channel} not in df_channels'
+        return self.get_df_bel_channels().get(channel)
     
     def add_df_bel_channel(self, key, df):
         self._df_bel_channels[key] = df
