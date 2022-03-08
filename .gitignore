@@ -1,3 +1,4 @@
+.DS_Store
 *.csv
 *.xls*
 *.pyc
@@ -5,3 +6,4 @@
 *.txt
 *.pkl
 settings.json
+.ipynb_checkpoints
