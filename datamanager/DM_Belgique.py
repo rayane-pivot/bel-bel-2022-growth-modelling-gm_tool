@@ -1,21 +1,34 @@
-import pandas as pd
 import datetime as dt
+
+import pandas as pd
+
 from datamanager.DataManager import DataManager
 
 
 class DM_Belgique(DataManager):
-    """ DataManager for Belgium data"""
+    """DataManager for Belgium data"""
+
     PATH = "data/Belgium_Data.xlsx"
     PATH_TO_DATES = "data/raw_data_minimal.xlsx"
-    
+
     def open_excel(self, path=None):
+        """TODO describe function
+
+        :param path:
+        :returns:
+
+        """
         if path:
             self.df = pd.read_csv(path)
             return
         # self.PATH=path
-        df_preproc = pd.read_excel(self.PATH, sheet_name="total belgium", engine="openpyxl")
-        dates = pd.read_excel(self.PATH_TO_DATES, sheet_name="dates", engine="openpyxl")["dates"].values
-        
+        df_preproc = pd.read_excel(
+            self.PATH, sheet_name="total belgium", engine="openpyxl"
+        )
+        dates = pd.read_excel(
+            self.PATH_TO_DATES, sheet_name="dates", engine="openpyxl"
+        )["dates"].values
+
         df_final = pd.DataFrame()
 
         for index, row in df_preproc.iloc[2:, 1:].iterrows():
@@ -32,12 +45,14 @@ class DM_Belgique(DataManager):
             dict_temp["Price without promo"] = row.iloc[163:203].values
             dict_temp["Sales value with promo"] = row.iloc[203:243].values
             dict_temp["Sales volume with promo"] = row.iloc[243:].values
-            
-            df_final = pd.concat([df_final, pd.DataFrame.from_dict(dict_temp)], ignore_index=True)
-            
-        df_final["Sub Category"] = df_final["Sub Category"].fillna("ALL SUB CATEGORIES") 
-        df_final["Brand"] = df_final["Brand"].fillna("ALL BRANDS") 
-        df_final['Date'] = df_final['Date'].apply(lambda x: dt.datetime.strftime(x, "%Y-%m-%d"))
-        self.df = df_final
 
-    
+            df_final = pd.concat(
+                [df_final, pd.DataFrame.from_dict(dict_temp)], ignore_index=True
+            )
+
+        df_final["Sub Category"] = df_final["Sub Category"].fillna("ALL SUB CATEGORIES")
+        df_final["Brand"] = df_final["Brand"].fillna("ALL BRANDS")
+        df_final["Date"] = df_final["Date"].apply(
+            lambda x: dt.datetime.strftime(x, "%Y-%m-%d")
+        )
+        self.df = df_final

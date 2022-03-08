@@ -14,6 +14,12 @@ class DM_USA(DataManager):
     _country = "USA"
 
     def ad_hoc_USA(self, json_sell_out_params):
+        """TODO describe function
+
+        :param json_sell_out_params:
+        :returns:
+
+        """
         df = super().fill_df(json_sell_out_params, self._country)
 
         # DATES FORMATIING
@@ -45,7 +51,7 @@ class DM_USA(DataManager):
                     ]
                 )
             ].index,
-            "Category",
+            "Sub Category",
         ] = "CREAM CHEESE TUBS"
 
         df.loc[
@@ -57,7 +63,7 @@ class DM_USA(DataManager):
                     ]
                 )
             ].index,
-            "Category",
+            "Sub Category",
         ] = "SINGLE SERVE"
 
         df.loc[
@@ -143,6 +149,12 @@ class DM_USA(DataManager):
         self._df = df
 
     def fill_df_bel(self, json_sell_out_params):
+        """TODO describe function
+
+        :param json_sell_out_params:
+        :returns:
+
+        """
         assert not self._df.empty, "df is empty, call ad_hoc_USA() or load() first"
         df = self._df.copy()
         df.Date = pd.to_datetime(df.Date)
@@ -269,6 +281,15 @@ class DM_USA(DataManager):
         self._df_bel = df_bel
 
     def compute_Finance(self, df_finance, aandp_codes, date_min, date_max):
+        """TODO describe function
+
+        :param df_finance:
+        :param aandp_codes:
+        :param date_min:
+        :param date_max:
+        :returns:
+
+        """
         # Compute from Finance dataframe
         df_finance = df_finance[df_finance["Country"] == self._country]
         # Filter brands for the study
@@ -328,6 +349,14 @@ class DM_USA(DataManager):
         ]
 
     def compute_Inno(self, df, date_begining: str, innovation_duration: int):
+        """TODO describe function
+
+        :param df:
+        :param date_begining:
+        :param innovation_duration:
+        :returns:
+
+        """
         # Compute from innovation dataframe
         df_concat = pd.DataFrame()
         delta = dt.timedelta(weeks=innovation_duration)
@@ -372,6 +401,14 @@ class DM_USA(DataManager):
         return df_concat[["Brand", "Date", "Rate of Innovation"]]
 
     def compute_Promo_Cost(self, path: str, renaming_brands: dict, features: list):
+        """TODO describe function
+
+        :param path:
+        :param renaming_brands:
+        :param features:
+        :returns:
+
+        """
         # for any question, ask ahmed@pivotandco.com
         df_promo = pd.read_excel(path, engine="openpyxl")
         renaming_brands = renaming_brands
@@ -416,6 +453,13 @@ class DM_USA(DataManager):
         return df_promo_res
 
     def compute_HH_Index(self, path: str, header: list):
+        """TODO describe function
+
+        :param path:
+        :param header:
+        :returns:
+
+        """
         # cut excel file to ndarremove half the columns, keep HH index
         df_h = pd.read_excel(path, engine="openpyxl", header=header).iloc[:, 1:210]
         # remove ALL BRANDS
@@ -436,6 +480,12 @@ class DM_USA(DataManager):
         return df_hh
 
     def fill_df_bel_old(self, json_params):
+        """TODO describe function
+
+        :param json_params:
+        :returns:
+
+        """
         assert self._df is not None, "df is empty, call ad_hoc_USA() or load() first"
         df = self.get_df()
         df_bel = (
@@ -484,6 +534,11 @@ class DM_USA(DataManager):
         # df_bel.to_excel('assets/df_bel.xlsx')
 
     def compute_mean_Price_sum_Volume(self):
+        """TODO describe function
+
+        :returns:
+
+        """
         df_temp = (
             self.get_df()
             .groupby(["Date", "Brand"], as_index=False)[
@@ -493,6 +548,13 @@ class DM_USA(DataManager):
         )
 
     def compute_Inno_old(self, path, date_begining="2017-12-31"):
+        """TODO describe function
+
+        :param path:
+        :param date_begining:
+        :returns:
+
+        """
         # load excel file
         df_ino = pd.read_excel(path, header=7)
         # rename Brands
@@ -552,6 +614,12 @@ class DM_USA(DataManager):
         return df_concat[["Brand", "Date", "Rate of Innovation"]]
 
     def compute_Promo_Cost_old(self, path):
+        """TODO describe function
+
+        :param path:
+        :returns:
+
+        """
         df_promo = pd.read_excel(path, engine="openpyxl")
         renaming_brands = {
             "BOURSIN": "BOURSIN",
@@ -612,6 +680,12 @@ class DM_USA(DataManager):
         return df_promo_res
 
     def compute_HH_Index_old(self, path):
+        """TODO describe function
+
+        :param path:
+        :returns:
+
+        """
         # cut excel file to remove half the columns, keep HH index
         df_h = pd.read_excel(path, engine="openpyxl", header=8).iloc[:, 1:210]
         # remove ALL BRANDS
@@ -630,3 +704,33 @@ class DM_USA(DataManager):
         # rename brand
         df_hh["Brand"] = df_hh["Brand"].apply(lambda x: x.strip())
         return df_hh
+
+    def find_leaders(self):
+        """this function is just a stash for code"""
+        df_leaders["year"] = pd.DatetimeIndex(df_leaders["Date"]).year
+        df_leaders = df_leaders[df_leaders.Brand != "ALL BRANDS"]
+
+        df_concat = pd.DataFrame(columns=["Brand", "Sales in volume", "SHARE"])
+        for name, group in df_leaders.groupby(["year"]):
+            if name == 2017:
+                continue
+            # display(group)
+            leaders = (
+                group.groupby("Brand", as_index=False)["Sales in volume"]
+                .agg(sum)
+                .sort_values(by="Sales in volume", ascending=False)
+                .iloc[:4]
+                .reset_index(drop=True)
+            )
+            leaders["SHARE"] = (
+                leaders["Sales in volume"] / group["Sales in volume"].sum() * 100
+            )
+            leaders["Sales in volume"] = leaders["Sales in volume"].apply(
+                lambda x: x / 100000
+            )
+            leaders["year"] = int(name)
+            df_concat = pd.concat([df_concat, leaders], ignore_index=True)
+
+        # display(df_concat)
+
+        # df_concat.to_excel('assets/cheese_market_leaders_USA.xlsx')
