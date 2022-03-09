@@ -9,7 +9,8 @@ from sklearn.preprocessing import MinMaxScaler, minmax_scale
 
 class Model:
     def brand_pos(self, df, year_min: int):
-        """TODO describe function
+        """Brand Positioning Matrix
+        pivot df to return Brand/Category/Sales in volume
 
         :param df:
         :param year_min:
@@ -32,7 +33,8 @@ class Model:
         return brand_positioning_matrix.div(1000)
 
     def growth(self, df, on: str, year1: int, year2: int):
-        """TODO describe function
+        """Brand Positioning Matrix
+        compute growth and cagr for brands and categories
 
         :param df:
         :param on:
@@ -43,7 +45,8 @@ class Model:
         """
 
         def cagr(x):
-            """TODO describe function
+            """local function for groupby.apply
+            compute compund annual growth rate
 
             :param x:
             :returns:
@@ -64,10 +67,10 @@ class Model:
             return (math.pow((y2 / y1), (1 / (year2 - year1 + 1))) - 1) * 100
 
         def apply_growth(x):
-            """TODO describe function
+            """local function for groupby.apply
 
             :param x:
-            :returns:
+            :returns: sales in volume year2 - year1
 
             """
             y1 = (
@@ -105,13 +108,15 @@ class Model:
     def compute_brand_positioning_matrix(
         self, df, year_min: int, year1: int, year2: int
     ):
-        """TODO describe function
+        """Compute brand positioning matrix with Sales in volume
+        from year_min.
+        Cagr and growth are from year1 to year2
 
         :param df:
         :param year_min:
         :param year1:
         :param year2:
-        :returns:
+        :returns: brand_positioning_matrix
 
         """
         # Compute brand positioning matrix, cagr and growth
@@ -129,7 +134,8 @@ class Model:
         return brand_positioning_matrix
 
     def from_df_bel(self, df_bel, year: int):
-        """TODO describe function
+        """Attack_init_state
+        compute columns from df_bel
 
         :param df_bel:
         :param year:
@@ -138,30 +144,30 @@ class Model:
         """
 
         def ap(x):
-            """TODO describe function
+            """local function for groupby apply
 
             :param x:
-            :returns:
+            :returns: sum of A&P for year
 
             """
             if "A&P" in x:
                 return x[x.Date.dt.year == year]["A&P"].agg("sum")
 
         def price(x):
-            """TODO describe function
+            """local function for groupby apply
 
             :param x:
-            :returns:
+            :returns: average of Price per volume for year
 
             """
             if "Price per volume" in x.columns:
                 return x[x.Date.dt.year == year]["Price per volume"].agg("mean")
 
         def promo(x):
-            """TODO describe function
+            """local function for groupby apply
 
             :param x:
-            :returns:
+            :returns: sum of Promo Cost for year
 
             """
             if "Promo Cost" in x.columns:
@@ -181,13 +187,13 @@ class Model:
         return df_grp.loc[df_grp[df_grp.Date.dt.year == year].index, :]
 
     def compute_attack_init_state(self, df, df_bel, json_sell_out_params, country: str):
-        """TODO describe function
+        """compute attack init state
 
         :param df:
         :param df_bel:
         :param json_sell_out_params:
         :param country:
-        :returns:
+        :returns: df_attack_init_state
 
         """
         year = json_sell_out_params.get("FR").get("attack_init_state").get("year")
@@ -210,13 +216,13 @@ class Model:
         return df_attack_init_state
 
     def compute_brand_scorecard(self, df, df_bel, json_sell_out_params, country):
-        """TODO describe function
+        """Compute Brand Scorecard
 
         :param df:
         :param df_bel:
         :param json_sell_out_params:
         :param country:
-        :returns:
+        :returns: returns brand scorecard
 
         """
         # Columns :
@@ -245,22 +251,22 @@ class Model:
         return df_sales
 
     def compute_awareness(self, json_sell_out_params, country):
-        """TODO describe function
+        """Brand Scorecard
 
         :param json_sell_out_params:
         :param country:
-        :returns:
+        :returns: df_awareness
 
         """
         aw = json_sell_out_params.get(country).get("brand scorecard").get("awareness")
         return pd.DataFrame.from_dict(aw, orient="index", columns=["Brand Awareness"])
 
     def compute_sales(self, df, date_min: str):
-        """TODO describe function
+        """Brand Scorecard
 
         :param df:
         :param date_min:
-        :returns:
+        :returns: df_sales
 
         """
         df_temp = df.copy()
@@ -286,12 +292,12 @@ class Model:
         return table_sales
 
     def compute_share(self, df, df_sales, date_min: str):
-        """TODO describe function
+        """Brand Scorecard
 
         :param df:
         :param df_sales:
         :param date_min:
-        :returns:
+        :returns: df_share
 
         """
         df_temp = df.copy()
@@ -312,11 +318,11 @@ class Model:
         return df_sales
 
     def compute_price(self, df_bel, date_min: str):
-        """TODO describe function
+        """Brand Scorecard
 
         :param df_bel:
         :param date_min:
-        :returns:
+        :returns: df_price
 
         """
         df_temp = df_bel.copy()
@@ -332,7 +338,7 @@ class Model:
         return df_grp.groupby("Brand")["Price per volume"].agg("mean")
 
     def compute_AP(self, df_bel, date_min: str):
-        """TODO describe function
+        """Brand Scorecard
 
         :param df_bel:
         :param date_min:

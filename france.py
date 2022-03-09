@@ -33,19 +33,19 @@ def main():
         json_sell_out_params.get("FR").get("brand_positioning_matrix").get("year_min")
     )
 
-    # for channel, df in data_manager.get_df_channels().items():
-    #     brand_positioning_matrix = model.compute_brand_positioning_matrix(df,
-    #                                                                   year_min=year_min,
-    #                                                                   year1=year1,
-    #                                                                   year2=year2)
+    for channel, df in data_manager.get_df_channels().items():
+        brand_positioning_matrix = model.compute_brand_positioning_matrix(df,
+                                                                      year_min=year_min,
+                                                                      year1=year1,
+                                                                      year2=year2)
 
     #     brand_positioning_matrix.to_excel(f'view/France/FR_{channel}_brand_positioning_matrix_0703.xlsx')
 
-    # for channel, df in data_manager.get_df_channels().items():
-    #     brand_scorecard = model.compute_brand_scorecard(df,
-    #                                                     data_manager.get_df_bel_by_channel(channel=channel),
-    #                                                     json_sell_out_params=json_sell_out_params,
-    #                                                     country='FR')
+    for channel, df in data_manager.get_df_channels().items():
+        brand_scorecard = model.compute_brand_scorecard(df,
+                                                        data_manager.get_df_bel_by_channel(channel=channel),
+                                                        json_sell_out_params=json_sell_out_params,
+                                                        country='FR')
 
     #     brand_scorecard.to_excel(f'view/France/FR_{channel}_brand_scorecard_0703.xlsx')
 

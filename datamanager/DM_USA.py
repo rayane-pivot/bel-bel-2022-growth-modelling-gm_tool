@@ -14,10 +14,11 @@ class DM_USA(DataManager):
     _country = "USA"
 
     def ad_hoc_USA(self, json_sell_out_params):
-        """TODO describe function
+        """Call fill_df from parent class
+        format dataframe for use in Model
 
-        :param json_sell_out_params:
-        :returns:
+        :param json_sell_out_params: json params dict
+        :returns: None
 
         """
         df = super().fill_df(json_sell_out_params, self._country)
@@ -122,10 +123,6 @@ class DM_USA(DataManager):
         df_periods.Period = df_periods.Period + 1
         df = pd.merge(df, df_periods, on="Date", how="left")
 
-        # Remove PLANT BASED DUPLICATES
-        # for brand in df[df.Category=='PLANT BASED'].Brand.unique():
-        #     df = df[~((df.Brand==brand) & (df.Category != "PLANT BASED"))]
-
         # DROP DUPLICATES
         df = df[
             ~df.round(3).duplicated(
@@ -149,10 +146,10 @@ class DM_USA(DataManager):
         self._df = df
 
     def fill_df_bel(self, json_sell_out_params):
-        """TODO describe function
+        """build df_bel
 
-        :param json_sell_out_params:
-        :returns:
+        :param json_sell_out_params: json params dict
+        :returns: None
 
         """
         assert not self._df.empty, "df is empty, call ad_hoc_USA() or load() first"
@@ -281,13 +278,13 @@ class DM_USA(DataManager):
         self._df_bel = df_bel
 
     def compute_Finance(self, df_finance, aandp_codes, date_min, date_max):
-        """TODO describe function
+        """compute df_finance
 
         :param df_finance:
         :param aandp_codes:
         :param date_min:
         :param date_max:
-        :returns:
+        :returns: df_finance
 
         """
         # Compute from Finance dataframe
@@ -349,12 +346,12 @@ class DM_USA(DataManager):
         ]
 
     def compute_Inno(self, df, date_begining: str, innovation_duration: int):
-        """TODO describe function
+        """compute Innovation
 
         :param df:
         :param date_begining:
         :param innovation_duration:
-        :returns:
+        :returns: df_innovation
 
         """
         # Compute from innovation dataframe
@@ -401,12 +398,12 @@ class DM_USA(DataManager):
         return df_concat[["Brand", "Date", "Rate of Innovation"]]
 
     def compute_Promo_Cost(self, path: str, renaming_brands: dict, features: list):
-        """TODO describe function
+        """Compute Cost of Promotions
 
         :param path:
         :param renaming_brands:
         :param features:
-        :returns:
+        :returns: df_promocost
 
         """
         # for any question, ask ahmed@pivotandco.com
@@ -453,11 +450,11 @@ class DM_USA(DataManager):
         return df_promo_res
 
     def compute_HH_Index(self, path: str, header: list):
-        """TODO describe function
+        """Compute Household penetration index
 
         :param path:
         :param header:
-        :returns:
+        :returns: df_hh
 
         """
         # cut excel file to ndarremove half the columns, keep HH index
@@ -478,259 +475,3 @@ class DM_USA(DataManager):
         # rename brand
         df_hh["Brand"] = df_hh["Brand"].apply(lambda x: x.strip())
         return df_hh
-
-    def fill_df_bel_old(self, json_params):
-        """TODO describe function
-
-        :param json_params:
-        :returns:
-
-        """
-        assert self._df is not None, "df is empty, call ad_hoc_USA() or load() first"
-        df = self.get_df()
-        df_bel = (
-            df[df.Brand.isin(json_params.get(self._country).get("bel_brands"))]
-            .groupby(["Date", "Brand"], as_index=False)[
-                "Price per volume", "Sales in volume", "Sales in value", "Distribution"
-            ]
-            .agg(
-                {
-                    "Price per volume": "mean",
-                    "Sales in volume": "sum",
-                    "Sales in value": "sum",
-                    "Distribution": "mean",
-                }
-            )
-        )
-
-        df_AP = self.compute_Finance(json_params, self._country)
-        df_bel = pd.merge(df_bel, df_AP, on=["Brand", "Date"], how="left")
-
-        df_inno = self.compute_Inno(
-            json_params.get(self._country)
-            .get("dict_path")
-            .get("PATH_INNO")
-            .get("Total Country")
-        )
-        df_bel = pd.merge(df_bel, df_inno, on=["Brand", "Date"], how="left")
-
-        df_promocost = self.compute_Promo_Cost(
-            json_params.get(self._country)
-            .get("dict_path")
-            .get("PATH_PROMO_COST")
-            .get("Total Country")
-        )
-        df_bel = pd.merge(df_bel, df_promocost, on=["Brand", "Date"], how="left")
-
-        df_hh = self.compute_HH_Index(
-            json_params.get(self._country)
-            .get("dict_path")
-            .get("PATH_HH_INDEX")
-            .get("Total Country")
-        )
-        df_bel = pd.merge(df_bel, df_hh, on=["Brand", "Date"], how="left")
-
-        self._df_bel = df_bel
-        # df_bel.to_excel('assets/df_bel.xlsx')
-
-    def compute_mean_Price_sum_Volume(self):
-        """TODO describe function
-
-        :returns:
-
-        """
-        df_temp = (
-            self.get_df()
-            .groupby(["Date", "Brand"], as_index=False)[
-                "Price per volume", "Sales in volume"
-            ]
-            .agg(["mean", "sum"])
-        )
-
-    def compute_Inno_old(self, path, date_begining="2017-12-31"):
-        """TODO describe function
-
-        :param path:
-        :param date_begining:
-        :returns:
-
-        """
-        # load excel file
-        df_ino = pd.read_excel(path, header=7)
-        # rename Brands
-        df_ino = df_ino.rename(
-            columns={"MAJOR BRAND_PRIBEL  [ MAJOR BRAND_PRIBEL ]": "Brand"}
-        )
-        # Remove 'all categories'
-        df_ino = df_ino[~df_ino["Product"].str.contains("ALL CATEGORIES")]
-        # Convert columns names to date format
-        cols = [x for x in df_ino.columns if "Week" in x]
-        df_ino = df_ino.rename(
-            columns={
-                x: dt.datetime.strftime(
-                    dt.datetime.strptime(x.split()[-1], "%m-%d-%y"), "%Y-%m-%d"
-                )
-                for x in cols
-            }
-        )
-        # remove unwanted columns
-        df_ino = df_ino.drop(columns=["Product", "Dollar Sales 2018-2021 OK"])
-        # Set concat dataframe
-        df_concat = pd.DataFrame()
-        # for each brand
-        for brand, group in df_ino.groupby(["Brand"]):
-            # init df
-            df_merge = pd.DataFrame(index=group.columns.values[:-1])
-            group = group.drop("Brand", axis=1)
-            # Find date of first sale for each product
-            for col in group.T.columns:
-                first_sale = group.T[col][pd.notna(group.T[col])].index.values[0]
-                if first_sale == date_begining:
-                    pass
-                else:
-                    delta = dt.timedelta(weeks=104)
-                    date_end = (
-                        dt.datetime.strptime(first_sale, "%Y-%m-%d") + delta
-                    ).strftime("%Y-%m-%d")
-                    df_merge = pd.concat(
-                        [group.T[[col]].loc[first_sale:date_end], df_merge], axis=1
-                    )
-
-            df_innovation = pd.DataFrame(
-                df_merge.reset_index()
-                .sort_values(by="index")
-                .set_index("index")
-                .sum(axis=1)
-            ).rename(columns={0: "Rate of Innovation"})
-            df_innovation.loc["2015-01-01":"2020-01-01"] = 0.0
-            df_innovation = df_innovation.div(group.T.sum(axis=1), axis=0)
-            df_innovation["Brand"] = brand
-            df_innovation = df_innovation.reset_index().rename(
-                columns={"index": "Date"}
-            )
-            df_innovation = df_innovation[df_innovation["Date"] != "Brand"]
-            df_concat = pd.concat([df_concat, df_innovation])
-
-        return df_concat[["Brand", "Date", "Rate of Innovation"]]
-
-    def compute_Promo_Cost_old(self, path):
-        """TODO describe function
-
-        :param path:
-        :returns:
-
-        """
-        df_promo = pd.read_excel(path, engine="openpyxl")
-        renaming_brands = {
-            "BOURSIN": "BOURSIN",
-            "Laughing Cow": "THE LAUGHING COW",
-            "Mini Babybel": "BABYBEL",
-            "Prices": "PRICES",
-            "Nurishh": "NURISHH",
-            "Kaukauna": "KAUKAUNA",
-            "Merkts": "MERKTS",
-        }
-        features = [
-            "PH3",
-            "Year",
-            "Month",
-            "Week",
-            "09.Promo_OOI_USA",
-            "06.OI_Promo_USA",
-        ]
-        df_promo_bel = df_promo[df_promo.PH3.isin(renaming_brands.keys())][features]
-        df_promo_refri = df_promo[df_promo.PH3 == "Refrigerated Spreads"]
-        # swap PH3 and PH4 columns (KAUKAUNA and MERKTS)
-        df_promo_refri = df_promo_refri[df_promo_refri.PH4 != "Owls Nest"].rename(
-            columns={"PH3": "PH4", "PH4": "PH3"}
-        )[features]
-        # concat to have all brands on same columns
-        df_promo_res = pd.concat([df_promo_bel, df_promo_refri])
-        # rename brands
-        df_promo_res["PH3"] = df_promo_res["PH3"].map(renaming_brands)
-        # sum promo columns
-        df_promo_res["Cost"] = df_promo_res[
-            ["09.Promo_OOI_USA", "06.OI_Promo_USA"]
-        ].sum(axis=1)
-        # We want 52 weeks, so we merge week 53 with week 52
-        df_promo_res["Week"] = df_promo_res["Week"].replace({53: 52})
-        # group by ...
-        df_promo_res = (
-            df_promo_res.groupby(["PH3", "Year", "Week"]).agg(np.sum).reset_index()
-        )
-        # NURISHH is a special case
-        df_promo_nurishh = df_promo_res[df_promo_res.PH3 == "NURISHH"]
-        df_promo_res = df_promo_res[df_promo_res.PH3 != "NURISHH"]
-        df_promo_res["Date"] = (
-            list(
-                pd.date_range(
-                    start="2019-01-01", end="2021-12-31", freq="W-SUN"
-                ).strftime("%Y-%m-%d")
-            )
-            * df_promo_res.PH3.nunique()
-        )
-        df_promo_nurishh["Date"] = df_promo_res["Date"][
-            -df_promo_nurishh.shape[0] :
-        ].values
-        df_promo_res = pd.concat([df_promo_res, df_promo_nurishh])
-        df_promo_res = df_promo_res.rename(
-            columns={"PH3": "Brand", "Cost": "Promo Cost"}
-        )[["Brand", "Promo Cost", "Date"]]
-
-        return df_promo_res
-
-    def compute_HH_Index_old(self, path):
-        """TODO describe function
-
-        :param path:
-        :returns:
-
-        """
-        # cut excel file to remove half the columns, keep HH index
-        df_h = pd.read_excel(path, engine="openpyxl", header=8).iloc[:, 1:210]
-        # remove ALL BRANDS
-        df_hh = df_h[df_h["Unnamed: 1"] != "Total All Products"].fillna(0)
-        # group by brand
-        df_hh = df_hh.groupby("Unnamed: 1").agg(np.mean)
-        # create dates
-        df_hh.columns = pd.date_range(
-            start="2018-01-07", end="2021-12-31", freq="W-SUN"
-        ).strftime("%Y-%m-%d")
-        df_hh = (
-            pd.DataFrame(df_hh.stack())
-            .reset_index()
-            .rename(columns={"Unnamed: 1": "Brand", "level_1": "Date", 0: "HH"})
-        )
-        # rename brand
-        df_hh["Brand"] = df_hh["Brand"].apply(lambda x: x.strip())
-        return df_hh
-
-    def find_leaders(self):
-        """this function is just a stash for code"""
-        df_leaders["year"] = pd.DatetimeIndex(df_leaders["Date"]).year
-        df_leaders = df_leaders[df_leaders.Brand != "ALL BRANDS"]
-
-        df_concat = pd.DataFrame(columns=["Brand", "Sales in volume", "SHARE"])
-        for name, group in df_leaders.groupby(["year"]):
-            if name == 2017:
-                continue
-            # display(group)
-            leaders = (
-                group.groupby("Brand", as_index=False)["Sales in volume"]
-                .agg(sum)
-                .sort_values(by="Sales in volume", ascending=False)
-                .iloc[:4]
-                .reset_index(drop=True)
-            )
-            leaders["SHARE"] = (
-                leaders["Sales in volume"] / group["Sales in volume"].sum() * 100
-            )
-            leaders["Sales in volume"] = leaders["Sales in volume"].apply(
-                lambda x: x / 100000
-            )
-            leaders["year"] = int(name)
-            df_concat = pd.concat([df_concat, leaders], ignore_index=True)
-
-        # display(df_concat)
-
-        # df_concat.to_excel('assets/cheese_market_leaders_USA.xlsx')

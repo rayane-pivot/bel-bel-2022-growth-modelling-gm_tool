@@ -15,11 +15,11 @@ class DataManager:
     _df_bel = pd.DataFrame()
 
     def open_excel(self, json_sell_out_params, country):
-        """TODO describe function
+        """read Sale out data excel file
 
-        :param json_sell_out_params:
-        :param country:
-        :returns:
+        :param json_sell_out_params: params dict
+        :param country: country code for json params dict
+        :returns: dict of data for each file
 
         """
         headers = json_sell_out_params.get(country).get("header_lines")
@@ -33,11 +33,11 @@ class DataManager:
         return dict_distrib
 
     def fill_df(self, json_sell_out_params, country):
-        """TODO describe function
+        """Format extracted data to DataFrame, rename columns, check types
 
-        :param json_sell_out_params:
-        :param country:
-        :returns:
+        :param json_sell_out_params: params dict
+        :param country: country code for json params dict
+        :returns: df
 
         """
         dict_distrib = self.open_excel(json_sell_out_params, country)
@@ -59,13 +59,13 @@ class DataManager:
         finance_renaming_columns: list,
         header: list,
     ):
-        """TODO describe function
+        """Read Finance file, rename columns
 
-        :param path:
-        :param finance_cols:
-        :param finance_renaming_columns:
-        :param header:
-        :returns:
+        :param path: path to Finance file
+        :param finance_cols: original finance columns
+        :param finance_renaming_columns: new finance columns
+        :param header: line in excel at which the headers are 
+        :returns: df_finance
 
         """
         print(f"<fill_Finance> Loading data from file {path}")
@@ -88,15 +88,15 @@ class DataManager:
         columns_to_remove: list,
         date_format: str,
     ):
-        """TODO describe function
+        """Read Innovation file, rename columns
 
-        :param path:
-        :param header:
-        :param brand_column_name:
-        :param week_name:
-        :param columns_to_remove:
-        :param date_format:
-        :returns:
+        :param path: path to Innovation file
+        :param header: line in excel at which the headers are 
+        :param brand_column_name: column for brands in Innovation file
+        :param week_name: name of weeks in columns of Innovation file
+        :param columns_to_remove: useless columns in innovation file
+        :param date_format: date format in innovation columns
+        :returns: df_inno
 
         """
         print(f"<fill_Inno> Loading data from file {path}")
@@ -123,38 +123,29 @@ class DataManager:
         return df_ino
 
     def load(self, path):
-        """TODO describe function
+        """load df excel file
 
-        :param path:
-        :returns:
+        :param path: path to file
+        :returns: None
 
         """
         self._df = pd.read_excel(path)
 
     def load_df_bel(self, path):
-        """TODO describe function
+        """load df_bel from excel file
 
-        :param path:
-        :returns:
+        :param path: path to df_bel excel file
+        :returns: None
 
         """
         self._df_bel = pd.read_excel(path)
 
-    def fill_df_bel_old(self):
-        """TODO describe function
-
-        :returns:
-
-        """
-        df_bel = self.df[self.df["Brand"].isin(self.bel_brands)]
-        self.df_bel = df_bel
-
     def count_num_sundays_in_month(self, year, month):
-        """TODO describe function
+        """count number of sundays per month for year
 
-        :param year:
-        :param month:
-        :returns:
+        :param year: year
+        :param month: month
+        :returns: number of sundays
 
         """
         day_to_count = calendar.SUNDAY
@@ -180,9 +171,9 @@ class DataManager:
         print("columns and types are correct")
 
     def get_df(self):
-        """TODO describe function
+        """get df
 
-        :returns:
+        :returns: df
 
         """
         assert (
@@ -191,9 +182,9 @@ class DataManager:
         return self._df
 
     def get_df_bel(self):
-        """TODO describe function
+        """get df_bel
 
-        :returns:
+        :returns: df_bel
 
         """
         assert (
