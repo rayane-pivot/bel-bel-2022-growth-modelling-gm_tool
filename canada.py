@@ -13,8 +13,7 @@ def main():
         json_sell_out_params = json.load(f)
     country = "CAN"
     data_manager = DM_CAN()
-    # data_manager.ad_hoc_USA(json_sell_out_params)
-    # data_manager.fill_df_bel(json_sell_out_params)
+    data_manager.ad_hoc_CAN(json_sell_out_params)
 
 if __name__ == "__main__":
     main()
