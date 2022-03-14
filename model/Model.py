@@ -274,7 +274,6 @@ class Model:
         date_min = (
             json_sell_out_params.get(country).get("brand scorecard").get("date_min")
         )
-        print(df.columns)
         df_sales = self.compute_sales(df_bel, date_min=date_min)
         df_sales = self.compute_share(df, df_sales, date_min=date_min)
         df_price = self.compute_price(df_bel, date_min=date_min)

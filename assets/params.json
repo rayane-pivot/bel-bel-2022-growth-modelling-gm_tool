@@ -301,5 +301,128 @@
             "fragmentation n_brands":5,
             "inno_year_min":2020
         }
+    },
+    "KSA":{
+        "_comment":{},
+        "dict_path" : {
+            "PATH_SALES": {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Sell-Out Data (Nielsen) Modern & Traditional Trade.xlsx"},
+            "PATH_INNO" : {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Sell-Out Data (IRI) Rate Of Innovation.xlsx"},
+            "PATH_FINANCE" : {"Total Country":"data/KSA/"},
+            "PATH_PROMO_COST" : {"Total Country":"data/KSA/"},
+            "PATH_HH_INDEX" : {"Total Country":""}
+            },
+        "sales_renaming_columns":[
+            "Brand",
+            "Market",
+            "Category",
+            "Sub Category",
+            "Flavor",
+            "Promo",
+            "Channel",
+            "Date",
+            "Modern Sales in value",
+            "Modern Sales in volume",
+            "Modern Price per volume",
+            "Modern Distribution",
+            "Trad Sales in value",
+            "Trad Sales in volume",
+            "Trad Price per volume",
+            "Trad Distribution"
+        ],
+        "sales_cat_cols":[
+            "BRAND",	
+            "CHEESE TYPE",
+            "CHEESE SEGMENT",	
+            "CHEESE SUB SEGMENT",
+            "CHEESE FLAVOUR",
+            "PROMO/NON PROMO",
+            "Channel",
+            "Feature"
+        ],
+        "sales_date_format":"%b %Y",
+        "date_format":"%Y-%m",
+        "header_lines":[4],
+        "sheet_name":[
+            "Trad.Trade - Val$",
+            "Trad.Trade - Vol Kgs ",
+            "Trad.Trade - Price Vol",
+            "Trad.Trade - TDP",
+            "Mod.Trade - Val$",
+            "Mod.Trade - Vol Kgs ",
+            "Mod.Trade - Price Vol",
+            "Mod.Trade - TDP"
+        ],
+        "drop_levels":0,
+        "sales_col_names":["Unnamed: 0", "FB CHEESE TYP", "FB CHEESE SEGMNT", "FB BRAND", "Channel"],
+        "source":"Nielsen",
+        "bel_brands":["LAVACHEQUIRIT", "KIRI", "JIBNET ABOU AL WALAD"],
+        "dates":{
+            "2018": {"Min": "2018-01-01", "Max": "2019-01-01"},
+            "2019": {"Min": "2019-01-01", "Max": "2020-01-01"}, 
+            "2020": {"Min": "2020-01-01", "Max": "2021-01-01"}, 
+            "2021": {"Min": "2021-01-01", "Max": "2022-01-01"}, 
+            "HISTORY": {"Min": "2018-01-01", "Max": "2022-01-01"}
+            },
+        "dates_finance":{"Min": "2019-01-12", "Max": "2022-01-01"},
+        "A&P_codes":["000BQ", "000LA", "004LA", "000MB", "003NHDP", "000KEPC"],
+        "A&P_columns":["Date","Product","Amount","Code 2"],
+        "finance_renaming_columns":["Year", "Brand Code", "Spendings", "AorP"],
+        "brand_positioning_matrix":{
+            "year1" : 2019,
+            "year2" : 2021,
+            "year_min" : 2018
+        },
+        "Finance":{
+           "header":[0],
+           "finance_codes_to_brands" : {
+               "000BQ":"BOURSIN", 
+               "000LA":"LA VACHE QUI RIT", 
+               "004LA":"LA VACHE QUI RIT", 
+               "000MB":"MINI BABYBEL", 
+               "003NHDP":"NURISHH", 
+               "000KEPC":"KIRI"
+            }
+        },
+        "Inno":{
+            "header":[4],
+            "date_beg":"2019-01",
+            "innovation_duration":104,
+            "brand_column_name" : "Brand",
+            "week_name" : "",
+            "date_format":"%b %Y",
+            "columns_to_remove":["Item", "SubCategory", "Segment", "SubSegment"]
+        },
+        "Promo Cost":{
+            "renaming_brands" : {
+               "Boursin":"BOURSIN", 
+               "THE LAUGHING COW": "LA VACHE QUI RIT", 
+               "Mini Babybel": "MINI BABYBEL", 
+               "KIRI": "KIRI",
+               "Nurishh": "NURISHH"
+           },
+           "features": ["PH3", "Year", "Month", "Week", "06.OI_Promo_Sell_In_CA"],
+           "dates_promo":{"Min": "2019-01-12", "Max": "2022-01-01"}
+        },
+        "HH Index":{
+           "header":[8]
+        },
+        "brand scorecard":{
+           "date_min":"2017-12-31",
+           "awareness":{
+               "BOURSIN":76.0000,
+               "LA VACHE QUI RIT":88.0000, 
+               "MINI BABYBEL":85.0000, 
+               "NURISHH":1.0000, 
+               "KIRI":19.0000
+           }
+        },
+        "attack_init_state":{
+            "year":2021
+        },
+        "Capacity to Win":{
+            "year_min":2018,
+            "fragmentation n_brands":5,
+            "inno_year_min":2020
+        }
     }
  }

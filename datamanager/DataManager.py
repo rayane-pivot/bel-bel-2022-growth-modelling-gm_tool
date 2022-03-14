@@ -1,6 +1,7 @@
 import calendar
 import datetime as dt
 import json
+import re
 from pydoc import locate
 
 import pandas as pd
@@ -96,50 +97,6 @@ class DataManager:
         df_finance["Year"] = df_finance["Year"].apply(lambda x: int(str(x)[:4]))
         return df_finance
     
-    def fill_Finance_old(
-        self,
-        path: str,
-        finance_cols: list,
-        finance_renaming_columns: list,
-        header: list,
-    ):
-        """Read Finance file, rename columns
-
-        :param path: path to Finance file
-        :param finance_cols: original finance columns
-        :param finance_renaming_columns: new finance columns
-        :param header: line in excel at which the headers are 
-        :returns: df_finance
-
-        """
-        print(f"<fill_Finance> Loading data from file {path}")
-        # Load finance file and some formating
-        df_finance = pd.read_excel(path, header=header)
-        df_finance = df_finance[finance_cols]
-        # Rename columns
-        df_finance.columns = finance_renaming_columns
-        # Handle dates
-        df_finance["Month"] = df_finance["Year"].apply(lambda x: int(str(x)[5:8]))
-        df_finance["Year"] = df_finance["Year"].apply(lambda x: int(str(x)[:4]))
-        return df_finance
-    
-    def date_to_re(self, string:str, date_format:str):
-        import re
-        look_up_table = {
-            "d":"[0-9]{2}",
-            "y":"[0-9]{2}",
-            "Y":"[0-9]{4}",
-            "m":"[0-9]{2}",
-            "b":"[A-Z][a-z]{2}"
-        }
-        reg = r".* ("
-        char = date_format[2]
-        for i in range(0, len(date_format), 3):
-            reg+=look_up_table.get(date_format[i+1])
-            reg+=char
-        reg+='*)'
-        return re.findall(reg, string)[0]
-
     def fill_Inno(
         self,
         path: str,
@@ -185,6 +142,22 @@ class DataManager:
             columns=[x for x in df_ino.columns if x in columns_to_remove]
         )
         return df_ino
+    
+    def date_to_re(self, string:str, date_format:str):
+        look_up_table = {
+            "d":"[0-9]{2}",
+            "y":"[0-9]{2}",
+            "Y":"[0-9]{4}",
+            "m":"[0-9]{2}",
+            "b":"[A-Za-z]{3}"
+        }
+        reg = r".* ("
+        char = date_format[2]
+        for i in range(0, len(date_format), 3):
+            reg+=look_up_table.get(date_format[i+1])
+            reg+=char
+        reg+='*)'
+        return re.findall(reg, string)[0]
 
     def load(self, path):
         """load df excel file

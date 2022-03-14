@@ -1,4 +1,5 @@
 import datetime as dt
+from itertools import count
 
 import pandas as pd
 
@@ -76,6 +77,7 @@ class DM_FR(DataManager):
                         "Price per volume",
                         "Sales in volume",
                         "Sales in value",
+                        "Sales volume with promo",
                         "Distribution",
                     ]
                 ]
@@ -84,10 +86,13 @@ class DM_FR(DataManager):
                         "Price per volume": "mean",
                         "Sales in volume": "sum",
                         "Sales in value": "sum",
+                        "Sales volume with promo":"sum",
                         "Distribution": "mean",
                     }
                 )
             )
+
+            df_bel["Promo Cost"] = df_bel["Sales volume with promo"] / df_bel["Sales in volume"]
 
             PATH_FINANCE = (
                 json_sell_out_params.get(self._country)
@@ -115,11 +120,15 @@ class DM_FR(DataManager):
                 .get("country_name")
             )
             df_finance = self.fill_Finance(
-                path=PATH_FINANCE,
-                finance_cols=FINANCE_COLS,
-                finance_renaming_columns=FINANCE_RENAMING_COLS,
-                header=FINANCE_HEADER,
+                json_sell_out_params=json_sell_out_params,
+                country=self._country
             )
+            # df_finance = self.fill_Finance(
+            #     path=PATH_FINANCE,
+            #     finance_cols=FINANCE_COLS,
+            #     finance_renaming_columns=FINANCE_RENAMING_COLS,
+            #     header=FINANCE_HEADER,
+            # )
             df_finance = self.compute_Finance(
                 df_finance, AP_CODES, DATE_MIN, DATE_MAX, country_name=COUNTRY_NAME
             )

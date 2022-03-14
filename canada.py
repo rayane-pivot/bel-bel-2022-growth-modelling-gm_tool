@@ -19,8 +19,8 @@ def main():
     data_manager.ad_hoc_CAN(json_sell_out_params)
     data_manager.fill_df_bel(json_sell_out_params)
 
-    #data_manager.get_df().to_excel("view/CAN/CAN_df_postprocessing.xlsx", index=False)
-    # data_manager.get_df_bel().to_excel("view/CAN/CAN_df_bel.xlsx", index=False)
+    data_manager.get_df().to_excel("view/CAN/CAN_df_postprocessing.xlsx", index=False)
+    data_manager.get_df_bel().to_excel("view/CAN/CAN_df_bel.xlsx", index=False)
 
     model = M_CAN()
 
@@ -49,7 +49,7 @@ def main():
         country=country,
     )
 
-    attack_init_state.to_excel(f'view/CAN/CAN_attack_init_state_1103.xlsx', index=False)
+    # attack_init_state.to_excel(f'view/CAN/CAN_attack_init_state_1103.xlsx', index=False)
 
 
 if __name__ == "__main__":
