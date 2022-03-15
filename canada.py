@@ -19,8 +19,8 @@ def main():
     data_manager.ad_hoc_CAN(json_sell_out_params)
     data_manager.fill_df_bel(json_sell_out_params)
 
-    #data_manager.get_df().to_excel("view/CAN/CAN_df_postprocessing.xlsx", index=False)
-    # data_manager.get_df_bel().to_excel("view/CAN/CAN_df_bel.xlsx", index=False)
+    # data_manager.get_df().to_excel("view/CAN/CAN_df_1503.xlsx", index=False)
+    # data_manager.get_df_bel().to_excel("view/CAN/CAN_df_bel_1503.xlsx", index=False)
 
     model = M_CAN()
 
@@ -39,8 +39,7 @@ def main():
     brand_positioning_matrix = model.compute_brand_positioning_matrix(
         data_manager.get_df(), year_min=year_min, year1=year1, year2=year2
     )
-
-    # brand_positioning_matrix.to_excel(PATH_TO_OUTPUTS + 'CAN_brand_positioning_matrix_1103.xlsx')
+    # brand_positioning_matrix.to_excel(PATH_TO_OUTPUTS + 'CAN_brand_positioning_matrix_1403.xlsx')
     
     attack_init_state = model.compute_attack_init_state(
         df=data_manager.get_df(),
@@ -48,8 +47,7 @@ def main():
         json_sell_out_params=json_sell_out_params,
         country=country,
     )
-
-    attack_init_state.to_excel(f'view/CAN/CAN_attack_init_state_1103.xlsx', index=False)
+    # attack_init_state.to_excel(f'view/CAN/CAN_attack_init_state_1403.xlsx', index=False)
 
 
 if __name__ == "__main__":

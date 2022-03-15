@@ -51,7 +51,7 @@ class Model:
             .reset_index()
         )
         df_grp.Date = df_grp.Date.dt.year
-        table = pd.pivot_table(df_grp, columns="Category", index="Date", values="Sales in volume")
+        table = pd.pivot_table(df_grp, columns=on, index="Date", values="Sales in volume")
         table=table.div(1000)
 
         return table
@@ -210,7 +210,7 @@ class Model:
 
             """
             if "Sales in volume" in x.columns:
-                return x[x.Date.dt.year == year]["Sales in volume"].agg("sum")
+                return x[x.Date.dt.year == year]["Sales in volume"].agg("sum")/1000
 
         df_bel = df_bel.copy()
         df_bel.Date = pd.to_datetime(df_bel.Date)
@@ -274,7 +274,6 @@ class Model:
         date_min = (
             json_sell_out_params.get(country).get("brand scorecard").get("date_min")
         )
-        print(df.columns)
         df_sales = self.compute_sales(df_bel, date_min=date_min)
         df_sales = self.compute_share(df, df_sales, date_min=date_min)
         df_price = self.compute_price(df_bel, date_min=date_min)
