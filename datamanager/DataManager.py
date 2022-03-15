@@ -1,6 +1,7 @@
 import calendar
 import datetime as dt
 import json
+import re
 from pydoc import locate
 
 import pandas as pd
@@ -43,21 +44,23 @@ class DataManager:
         dict_distrib = self.open_excel(json_sell_out_params, country)
         df_concat = pd.DataFrame()
         for distrib, dict_df in dict_distrib.items():
+            if json_sell_out_params.get(country).get("source") == "Nielsen":
+                for sheet, df_sheet in dict_df.items():
+                    df_sheet['Feature'] = sheet
             df = pd.concat(dict_df.values(), axis=0)
             print(f"<fill_df> Size of {distrib} dataframe : {df.shape}")
             if json_sell_out_params.get(country).get("levels"):
                 df.columns = df.columns.droplevel(0)
-            df.columns = json_sell_out_params.get(country).get("sales_renaming_columns")
+            if json_sell_out_params.get(country).get("source") == "IRI":
+                df.columns = json_sell_out_params.get(country).get("sales_renaming_columns")
             df["Channel"] = distrib
             df_concat = pd.concat([df_concat, df])
         return df_concat.reset_index(drop=True)
 
     def fill_Finance(
         self,
-        path: str,
-        finance_cols: list,
-        finance_renaming_columns: list,
-        header: list,
+        json_sell_out_params,
+        country:str
     ):
         """Read Finance file, rename columns
 
@@ -68,6 +71,21 @@ class DataManager:
         :returns: df_finance
 
         """
+        path = (
+            json_sell_out_params.get(country)
+            .get("dict_path")
+            .get("PATH_FINANCE")
+            .get("Total Country")
+        )
+        
+        finance_cols = json_sell_out_params.get(country).get("A&P_columns")
+        finance_renaming_columns = json_sell_out_params.get(country).get(
+            "finance_renaming_columns"
+        )
+        
+        header = (
+            json_sell_out_params.get(country).get("Finance").get("header")
+        )
         print(f"<fill_Finance> Loading data from file {path}")
         # Load finance file and some formating
         df_finance = pd.read_excel(path, header=header)
@@ -75,10 +93,10 @@ class DataManager:
         # Rename columns
         df_finance.columns = finance_renaming_columns
         # Handle dates
-        df_finance["Month"] = df_finance["Year"].apply(lambda x: int(x[5:8]))
-        df_finance["Year"] = df_finance["Year"].apply(lambda x: int(x[:4]))
+        df_finance["Month"] = df_finance["Year"].apply(lambda x: int(str(x)[5:8]))
+        df_finance["Year"] = df_finance["Year"].apply(lambda x: int(str(x)[:4]))
         return df_finance
-
+    
     def fill_Inno(
         self,
         path: str,
@@ -105,13 +123,16 @@ class DataManager:
         # rename Brands
         df_ino = df_ino.rename(columns={brand_column_name: "Brand"})
         # Remove 'all categories'
-        df_ino = df_ino[~df_ino["Product"].str.contains("ALL CATEGORIES")]
+        try:
+            df_ino = df_ino[~df_ino["Product"].str.contains("ALL CATEGORIES")]
+        except KeyError:
+            pass
         # Convert columns names to date format
         cols = [x for x in df_ino.columns if week_name in x]
         df_ino = df_ino.rename(
             columns={
                 x: dt.datetime.strftime(
-                    dt.datetime.strptime(x.split()[-1], date_format), "%Y-%m-%d"
+                    dt.datetime.strptime(self.date_to_re(x, date_format), date_format), "%Y-%m-%d"
                 )
                 for x in cols
             }
@@ -121,6 +142,22 @@ class DataManager:
             columns=[x for x in df_ino.columns if x in columns_to_remove]
         )
         return df_ino
+    
+    def date_to_re(self, string:str, date_format:str):
+        look_up_table = {
+            "d":"[0-9]{2}",
+            "y":"[0-9]{2}",
+            "Y":"[0-9]{4}",
+            "m":"[0-9]{2}",
+            "b":"[A-Za-z]{3}"
+        }
+        reg = r".* ("
+        char = date_format[2]
+        for i in range(0, len(date_format), 3):
+            reg+=look_up_table.get(date_format[i+1])
+            reg+=char
+        reg+='*)'
+        return re.findall(reg, string)[0]
 
     def load(self, path):
         """load df excel file

@@ -15,15 +15,12 @@ def main():
     data_manager.ad_hoc_FR(json_sell_out_params)
     data_manager.fill_df_bel(json_sell_out_params)
 
-    for channel, df in data_manager.get_df_bel_channels().items():
-        df.to_excel(f"view/France/FR_{channel}_df_bel_0703.xlsx", index=False)
-    # data_manager.load('view/USA_df_post_processing.xlsx')
-    # print(data_manager.get_df().shape)
-    # print(data_manager.get_df_bel().shape)
-
-    # data_manager.get_df().to_excel('view/USA_df_postprocessing_0303.xlsx', index=False)
-    # data_manager.get_df_bel().to_excel('view/USA_df_bel_0303.xlsx')
-
+    for channel, df in data_manager.get_df_channels().items():
+        df.to_excel(f"view/France/FRANCE_NEW/FR_{channel}_df_1403.xlsx", index=False)
+    
+    for channel, df_bel in data_manager.get_df_bel_channels().items():
+        df_bel.to_excel(f"view/France/FRANCE_NEW/FR_{channel}_df_bel_1403.xlsx", index=False)
+    
     model = M_FR()
 
     # print(model.filter_data(data_manager.df))
@@ -39,15 +36,15 @@ def main():
                                                                       year1=year1,
                                                                       year2=year2)
 
-    #     brand_positioning_matrix.to_excel(f'view/France/FR_{channel}_brand_positioning_matrix_0703.xlsx')
+        # brand_positioning_matrix.to_excel(f'view/France/FRANCE_NEW/FR_{channel}_brand_positioning_matrix_1403.xlsx')
 
-    for channel, df in data_manager.get_df_channels().items():
-        brand_scorecard = model.compute_brand_scorecard(df,
-                                                        data_manager.get_df_bel_by_channel(channel=channel),
-                                                        json_sell_out_params=json_sell_out_params,
-                                                        country='FR')
+    # for channel, df in data_manager.get_df_channels().items():
+    #     brand_scorecard = model.compute_brand_scorecard(df,
+    #                                                     data_manager.get_df_bel_by_channel(channel=channel),
+    #                                                     json_sell_out_params=json_sell_out_params,
+    #                                                     country='FR')
 
-    #     brand_scorecard.to_excel(f'view/France/FR_{channel}_brand_scorecard_0703.xlsx')
+    #     brand_scorecard.to_excel(f'view/France/FRANCE_NEW/FR_{channel}_brand_scorecard_1403.xlsx')
 
     for channel in data_manager.get_df_channels().keys():
         attack_init_state = model.compute_attack_init_state(
@@ -57,9 +54,9 @@ def main():
             country="FR",
         )
 
-        attack_init_state.to_excel(
-            f"view/France/FR_{channel}_attack_init_state_0703.xlsx", index=False
-        )
+        # attack_init_state.to_excel(
+        #     f"view/France/FRANCE_NEW/FR_{channel}_attack_init_state_1403.xlsx", index=False
+        # )
 
     # df_brand_scaled, df_category_scaled, df_market_brand_scaled, capacity_to_win = model.compute_Capacity_to_Win(
     #     df = data_manager.get_df(),

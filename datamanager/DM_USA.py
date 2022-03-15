@@ -176,33 +176,14 @@ class DM_USA(DataManager):
                 }
             )
         )
-
-        PATH_FINANCE = (
-            json_sell_out_params.get(self._country)
-            .get("dict_path")
-            .get("PATH_FINANCE")
-            .get("Total Country")
-        )
         AP_CODES = json_sell_out_params.get(self._country).get("A&P_codes")
-        FINANCE_COLS = json_sell_out_params.get(self._country).get("A&P_columns")
-        FINANCE_RENAMING_COLS = json_sell_out_params.get(self._country).get(
-            "finance_renaming_columns"
-        )
         DATE_MIN = (
             json_sell_out_params.get(self._country).get("dates_finance").get("Min")
         )
         DATE_MAX = (
             json_sell_out_params.get(self._country).get("dates_finance").get("Max")
         )
-        FINANCE_HEADER = (
-            json_sell_out_params.get(self._country).get("Finance").get("header")
-        )
-        df_finance = self.fill_Finance(
-            path=PATH_FINANCE,
-            finance_cols=FINANCE_COLS,
-            finance_renaming_columns=FINANCE_RENAMING_COLS,
-            header=FINANCE_HEADER,
-        )
+        df_finance = self.fill_Finance(json_sell_out_params, country=self._country)
         df_finance = self.compute_Finance(df_finance, AP_CODES, DATE_MIN, DATE_MAX)
         df_bel = pd.merge(df_bel, df_finance, on=["Brand", "Date"], how="left")
 

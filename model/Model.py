@@ -32,6 +32,30 @@ class Model:
         brand_positioning_matrix.index.name = "Brand"
         return brand_positioning_matrix.div(1000)
 
+    def cat_yearly_sales(self, df, on: str):
+        """Brand Positioning Matrix
+        compute sales in volume per year
+
+        :param df:
+        :param on:
+        :returns:
+
+        """
+
+        df = df.copy()
+        df.Date = pd.to_datetime(df.Date)
+
+        df_grp = (
+            df.groupby([on, pd.Grouper(key="Date", freq="Y")])["Sales in volume"]
+            .agg("sum")
+            .reset_index()
+        )
+        df_grp.Date = df_grp.Date.dt.year
+        table = pd.pivot_table(df_grp, columns=on, index="Date", values="Sales in volume")
+        table=table.div(1000)
+
+        return table
+
     def growth(self, df, on: str, year1: int, year2: int):
         """Brand Positioning Matrix
         compute growth and cagr for brands and categories
@@ -44,7 +68,7 @@ class Model:
 
         """
 
-        def cagr(x):
+        def BPM_cagr(x):
             """local function for groupby.apply
             compute compund annual growth rate
 
@@ -62,8 +86,9 @@ class Model:
                 if len(x[x.Date.dt.year == year2]["Sales in volume"].values) > 0
                 else None
             )
-            if (y1 is None) or (y2 is None):
-                return None
+
+            if (y1 is None) or (y2 is None) or (y1==0):
+                return 0.0
             return (math.pow((y2 / y1), (1 / (year2 - year1 + 1))) - 1) * 100
 
         def apply_growth(x):
@@ -100,9 +125,8 @@ class Model:
             .reset_index()
             .rename(columns={0: "GROWTH"})
         )
-
-        growth["CAGR"] = df_grp.groupby(on).apply(cagr).reset_index()[0]
-
+        growth["CAGR"] = df_grp.groupby(on).apply(BPM_cagr).reset_index().loc[:, 0]
+        
         return growth.set_index(on)
 
     def compute_brand_positioning_matrix(
@@ -124,9 +148,14 @@ class Model:
         growth_brand = self.growth(df, on="Brand", year1=year1, year2=year2)
         growth_category = self.growth(df, on="Category", year1=year1, year2=year2)
 
+        cat_yearly_sales = self.cat_yearly_sales(df, on="Category")
+
         # Concat brand positioning matrix, cagr and growth
         brand_positioning_matrix = pd.concat(
             [brand_positioning_matrix, growth_category.T]
+        )
+        brand_positioning_matrix = pd.concat(
+            [brand_positioning_matrix, cat_yearly_sales]
         )
         brand_positioning_matrix[growth_brand.columns] = growth_brand[
             growth_brand.columns
@@ -173,13 +202,23 @@ class Model:
             if "Promo Cost" in x.columns:
                 return x[x.Date.dt.year == year]["Promo Cost"].agg("sum")
 
+        def size(x):
+            """local function for groupby apply
+
+            :param x:
+            :returns: sum of Sales in volume for year
+
+            """
+            if "Sales in volume" in x.columns:
+                return x[x.Date.dt.year == year]["Sales in volume"].agg("sum")/1000
+
         df_bel = df_bel.copy()
         df_bel.Date = pd.to_datetime(df_bel.Date)
         df_grp = (
             df_bel.groupby(["Brand", pd.Grouper(key="Date", freq="Y")])
             .apply(
                 lambda r: pd.Series(
-                    {"A&P 2021": ap(r), "Price 2021": price(r), "Promo 2021": promo(r)}
+                    {"A&P 2021": ap(r), "Price 2021": price(r), "Promo 2021": promo(r), "Size 2021": size(r)}
                 )
             )
             .reset_index()
@@ -196,7 +235,7 @@ class Model:
         :returns: df_attack_init_state
 
         """
-        year = json_sell_out_params.get("FR").get("attack_init_state").get("year")
+        year = json_sell_out_params.get(country).get("attack_init_state").get("year")
         bel_brands = json_sell_out_params.get(country).get("bel_brands")
 
         df_temp = self.from_df_bel(df_bel, year=year)
@@ -380,7 +419,7 @@ class Model:
 
             """
             return x["Sales volume with promo"].mean() / x["Sales in volume"].mean()
-
+        
         df_temp = df.copy()
         df_temp.Date = pd.to_datetime(df_temp.Date)
         df_grp = (
@@ -573,7 +612,6 @@ class Model:
             return df
 
         date_count = df_bel.Date.nunique()
-        print(date_count)
         for brand, group in df_bel.groupby("Brand"):
             if group.Date.nunique() < date_count:
                 df_bel = handle_brand(df_bel, brand)
