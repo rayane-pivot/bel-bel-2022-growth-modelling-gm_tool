@@ -209,25 +209,29 @@
             "PATH_PROMO_COST" : {"Total Country":"data/CAN/Growth Modelling - CAN - 2019-2021 - Promo Cost (Xtel).xlsx"},
             "PATH_HH_INDEX" : {"Total Country":""}
             },
-        "sales_renaming_columns":[
-            "Product",
-            "Category",
-            "Sub Category",
-            "Brand",
-            "Channel",
-            "Date",
-            "Sales in value",
-            "Sales value with promo",
-            "Sales in volume",
-            "Sales volume with promo",
-            "Distribution",
-            "Price per volume",
-            "Price with promo"
-        ],
         "sales_col_week_name":"WE",
         "sales_date_format":"%b %d %y",
         "date_format":"%Y-%m-%d",
         "header_lines":[4],
+        "sales_renaming_columns_dict" : {
+            "CATEGORICALS":{
+                "Unnamed: 0":"Product", 
+                "FB CHEESE TYP":"Category", 
+                "FB CHEESE SEGMNT":"Sub Category", 
+                "FB BRAND":"Brand",
+                "Channel":"Channel", 
+                "Date":"Date"
+            },
+            "KPIS":{
+                "WSP_Sheet1 - Value $":"Sales in value", 
+                "WSP_Sheet1 - Value Promo $":"Sales value with promo", 
+                "WSP_Sheet1 - Vol(Kgs)":"Sales in volume", 
+                "WSP_Sheet2 - Vol Promo(Kgs)":"Sales volume with promo", 
+                "WSP_Sheet3 - TDP":"Distribution", 
+                "WSP_Sheet4 - Price Vol(Kg)":"Price per volume", 
+                "WSP_Sheet5 - Price Vol Promo(Kg":"Price with promo"
+            }
+        },
         "sheet_name":["WSP_Sheet1 - Value $", "WSP_Sheet1 - Value Promo $", "WSP_Sheet1 - Vol(Kgs)", "WSP_Sheet2 - Vol Promo(Kgs)", "WSP_Sheet3 - TDP", "WSP_Sheet4 - Price Vol(Kg)", "WSP_Sheet5 - Price Vol Promo(Kg"],
         "drop_levels":0,
         "sales_col_names":["Unnamed: 0", "FB CHEESE TYP", "FB CHEESE SEGMNT", "FB BRAND", "Channel"],

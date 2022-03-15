@@ -34,21 +34,21 @@ class DM_FR(DataManager):
         )
 
         #AD HOC SPECIALITE
-        df.loc[df[(df['Sub Category'].isin(['AOR REGIONAL'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'AOR REGIONAL'
+        df.loc[df[(df['Sub Category'].isin(['AOR REGIONAL'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'SPECIALITE AOR REGIONAL'
         df.loc[df[(df['Sub Category'].isin(['SPECIALITE A GOUT DOUX'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'SPECIALITE A GOUT DOUX'
 
         #AD HOC FRAIS A TARTINER
-        df.loc[df[(df['Sub Category'].isin(['ARO'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'ARO'
-        df.loc[df[(df['Sub Category'].isin(['NATURE'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'NATURE'
+        df.loc[df[(df['Sub Category'].isin(['ARO'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'FRAIS A TARTINER ARO'
+        df.loc[df[(df['Sub Category'].isin(['NATURE'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'FRAIS A TARTINER NATURE'
 
         #AD HOC ENFANT
-        df.loc[df[(df['Sub Category'].isin(['A TARTINER'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'A TARTINER'
-        df.loc[df[(df['Sub Category'].isin(['NOMADE'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'NOMADE'
+        df.loc[df[(df['Sub Category'].isin(['A TARTINER'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'ENFANT A TARTINER'
+        df.loc[df[(df['Sub Category'].isin(['NOMADE'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'ENFANT NOMADE'
 
         #AD HOC TRANCHE A FROID
-        df.loc[df[(df['Sub Category'].isin(['A GOUT'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'A GOUT'
-        df.loc[df[(df['Sub Category'].isin(['CHEVRE&BREBIS'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'CHEVRE&BREBIS'
-        df.loc[df[(df['Sub Category'].isin(['ORIGINAL'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'ORIGINAL'
+        df.loc[df[(df['Sub Category'].isin(['A GOUT'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'TRANCHE A FROID A GOUT'
+        df.loc[df[(df['Sub Category'].isin(['CHEVRE&BREBIS'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'TRANCHE A FROID CHEVRE&BREBIS'
+        df.loc[df[(df['Sub Category'].isin(['ORIGINAL'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'TRANCHE A FROID ORIGINAL'
 
         df = df[df.Date < json_sell_out_params.get(self._country).get("date_max")]
         for channel, group in df.groupby("Channel", as_index=False):

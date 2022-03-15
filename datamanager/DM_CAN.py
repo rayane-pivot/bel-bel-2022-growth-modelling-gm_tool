@@ -24,11 +24,12 @@ class DM_CAN(DataManager):
             "FB CHEESE TYP",
         ] = "PLANT BASED"
         date_cols = [col for col in df.columns if json_sell_out_params.get(self._country).get("sales_col_week_name") in col]
+        print(df.loc[df[df["FB BRAND"]=="MINI BABYBEL"][df["Feature"]=="WSP_Sheet1 - Vol(Kgs)"].index, date_cols].sum().sum())
         feature_cols = json_sell_out_params.get(self._country).get("sales_col_names")
         df_concat = pd.DataFrame()
         k=0
         for i , group in df.groupby(feature_cols):
-            
+
             group = group.set_index("Feature")
             df_dates = group[date_cols].T.reset_index()
             df_dates = df_dates.rename(columns={'index':'Date'})
@@ -43,7 +44,12 @@ class DM_CAN(DataManager):
                 k=k+1
                 continue
         print(k)
-        df_concat.columns = json_sell_out_params.get(self._country).get("sales_renaming_columns")
+        print(df_concat.columns)
+        cat_names = json_sell_out_params.get(self._country).get("sales_renaming_columns_dict").get("CATEGORICALS")
+        kpi_names = json_sell_out_params.get(self._country).get("sales_renaming_columns_dict").get("KPIS")
+        
+        df_concat = df_concat.rename(columns=dict(cat_names, **kpi_names))
+        print(df_concat.columns)
         df_concat = df_concat.reset_index(drop=True)
 
         sales_date_format=json_sell_out_params.get(self._country).get("sales_date_format")
