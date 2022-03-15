@@ -7,6 +7,8 @@
              "PATH_PROMO_COST" : {"Total Country":"data/Growth Modelling - USA - 2019-2021 - Promo Cost (Xtel).xlsx"},
              "PATH_HH_INDEX" : {"Total Country":"data/Growth Modelling - USA - Consumer Panel -US HH penetration GM.xlsx"}
              },
+        "sales_date_format":"%b %Y",
+        "date_format" : "%y-%m",
          "sales_renaming_columns":[
              "Date",
              "Product",
@@ -309,7 +311,7 @@
     "KSA":{
         "_comment":{},
         "dict_path" : {
-            "PATH_SALES": {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Sell-Out Data (Nielsen) Modern & Traditional Trade.xlsx"},
+            "PATH_SALES": {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Sell-Out Data (Nielsen) All.xlsx"},
             "PATH_INNO" : {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Sell-Out Data (IRI) Rate Of Innovation.xlsx"},
             "PATH_FINANCE" : {"Total Country":"data/KSA/"},
             "PATH_PROMO_COST" : {"Total Country":"data/KSA/"},
@@ -334,12 +336,15 @@
             "Trad Distribution"
         ],
         "sales_cat_cols":[
-            "BRAND",	
-            "CHEESE TYPE",
-            "CHEESE SEGMENT",	
-            "CHEESE SUB SEGMENT",
-            "CHEESE FLAVOUR",
-            "PROMO/NON PROMO",
+            "MARKET", 
+            "CHEESE TYPE", 
+            "CHEESE SUBCATEGORY", 
+            "CHEESE SEGMENT", 
+            "CHEESE SUB SEGMENT", 
+            "BRAND", 
+            "CHEESE FLAVOUR", 
+            "ITEM", 
+            "PROMO/NO PROMO",
             "Channel",
             "Feature"
         ],
@@ -347,15 +352,33 @@
         "date_format":"%Y-%m",
         "header_lines":[4],
         "sheet_name":[
-            "Trad.Trade - Val$",
-            "Trad.Trade - Vol Kgs ",
-            "Trad.Trade - Price Vol",
-            "Trad.Trade - TDP",
-            "Mod.Trade - Val$",
-            "Mod.Trade - Vol Kgs ",
-            "Mod.Trade - Price Vol",
-            "Mod.Trade - TDP"
+            "Val$",
+            "Vol Kgs",
+            "Price Vol",
+            "TDP"
         ],
+        "sales_renaming_columns_dict" : {
+            "CATEGORICALS":{
+                "MARKET":"Channel", 
+                "CHEESE TYPE":"Natural-Processed",
+                "CHEESE SUBCATEGORY":"Hard-Spreadable", 
+                "CHEESE SEGMENT":"Category",
+                "CHEESE SUB SEGMENT":"Sub Category", 
+                "BRAND":"Brand",
+                "CHEESE FLAVOUR": "Flavour",
+                "ITEM": "Product",
+                "PROMO/NO PROMO": "Promo",
+                "Channel" : "Total Country",
+                "Feature": "Feature",
+                "Date": "Date"
+            },
+            "KPIS":{
+                "Val$":"Sales in value", 
+                "Vol Kgs":"Sales in volume", 
+                "Price Vol":"Price per volume", 
+                "TDP":"Distribution"
+            }
+        },
         "drop_levels":0,
         "sales_col_names":["Unnamed: 0", "FB CHEESE TYP", "FB CHEESE SEGMNT", "FB BRAND", "Channel"],
         "source":"Nielsen",

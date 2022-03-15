@@ -16,63 +16,73 @@ class DM_KSA(DataManager):
         df = super().fill_df(json_sell_out_params, self._country)
         cat_cols = json_sell_out_params.get("KSA").get("sales_cat_cols")
         date_cols = [col for col in df.columns if col not in cat_cols]
+        cat_cols_no_feature = [col for col in cat_cols if col != "Feature"]
         
-        # Remove Feature from Feature columns
-        cat_cols.pop(-1)
         df_concat = pd.DataFrame()
-        k=0
+        for market, group in df.groupby(["MARKET"]):
+            dict_features = dict()
+            for feature, feature_group in group.groupby(["Feature"]):
+                f_group = feature_group.copy().set_index(cat_cols)
+                f_group = f_group[date_cols].stack(dropna=False).reset_index()
+                f_group = f_group.rename(columns={"level_11":f"Date", 0:feature})
+                df_market = group.groupby(cat_cols_no_feature).count().reset_index()[cat_cols_no_feature].copy().reset_index(drop=True)
+                df_market = df_market.merge(f_group, on=cat_cols_no_feature, how="left")
+                dict_features[feature]=df_market[[feature, "Date"]]
+            for key, value in dict_features.items():
+                df_market[key] = value[key]
+            df_concat = pd.concat([df_concat, df_market])
 
-        for i , group in df.groupby(cat_cols):
-            group = group.set_index("Feature")
-            df_dates = group[date_cols].T.reset_index()
-            df_dates = df_dates.rename(columns={'index':'Date'})
-            group = group[cat_cols].reset_index(drop=True)
-            df_dates = pd.concat([pd.DataFrame(group.iloc[0]).T, df_dates], axis=1)
-            df_dates.loc[:, cat_cols] = group.values[0]
-            try:
-                df_concat = pd.concat([df_concat, df_dates])
-            except Exception:
-                print(i)
-                print(group.shape)
-                k=k+1
-                continue
-        print(f'<ad_hoc_KSA> removed {k} duplicates')
-        df_concat.columns = json_sell_out_params.get("KSA").get("sales_renaming_columns")
+        df_concat = df_concat.rename(columns=json_sell_out_params.get(self._country).get("sales_renaming_columns_dict").get("CATEGORICALS"))
+        df_concat = df_concat.rename(columns=json_sell_out_params.get(self._country).get("sales_renaming_columns_dict").get("KPIS"))
+        
         df_concat = df_concat.reset_index(drop=True)
-        sales_date_format=json_sell_out_params.get("KSA").get("sales_date_format")
+
+        sales_date_format=json_sell_out_params.get(self._country).get("sales_date_format")
         date_format = json_sell_out_params.get("KSA").get("date_format")
         df_concat.Date = df_concat.Date.apply(lambda x:dt.datetime.strptime(x, sales_date_format)).dt.strftime(date_format)
         
-        df_modern = df_concat[[
-            'Brand', 'Market', 'Category', 'Sub Category', 'Flavor', 'Promo',
-            'Channel', 'Date', 'Modern Sales in value', 'Modern Sales in volume',
-            'Modern Price per volume', 'Modern Distribution'
-        ]]
-        df_modern.loc[:, 'Channel'] = "modern"
-        df_modern = df_modern.rename(columns={
-            'Modern Sales in value' : "Sales in value", 
-            'Modern Sales in volume' : "Sales in volume",
-            'Modern Price per volume' : "Price per volume", 
-            'Modern Distribution' : "Distribution"
-        })
+        df_concat.loc[df_concat[(df_concat['Category'] == 'PORTIONS') & (df_concat['Sub Category']=='TRIANGLE PORTION')].index, 'Category'] = 'PORTIONS TRIANGLE'
+        df_concat.loc[df_concat[(df_concat['Category'] == 'PORTIONS') & (df_concat['Sub Category']=='BAGS')].index, 'Category'] = 'PORTIONS OTHER'
+        df_concat.loc[df_concat[(df_concat['Category'] == 'PORTIONS') & (df_concat['Sub Category']=='SLICES')].index, 'Category'] = 'PORTIONS OTHER'
+        df_concat.loc[df_concat[(df_concat['Category'] == 'PORTIONS') & (df_concat['Sub Category']=='TRAY')].index, 'Category'] = 'PORTIONS OTHER'
+        df_concat.loc[df_concat[(df_concat['Category'] == 'PORTIONS') & (df_concat['Sub Category']=='SQUARE PORTION')].index, 'Category'] = 'PORTIONS SQUARE'
         
-        df_trad = df_concat[[
-            'Brand', 'Market', 'Category', 'Sub Category', 'Flavor', 'Promo',
-            'Channel', 'Date', 'Trad Sales in value',
-            'Trad Sales in volume', 'Trad Price per volume', 'Trad Distribution'
-        ]]
-        df_trad.loc[:, 'Channel'] = "trad"
-        df_trad = df_trad.rename(columns={
-            'Trad Sales in value' : "Sales in value", 
-            'Trad Sales in volume' : "Sales in volume",
-            'Trad Price per volume' : "Price per volume", 
-            'Trad Distribution' : "Distribution"
-        })
-       
+        
+
+        df_concat.loc[df_concat[(df_concat['Category'] == 'JAR') & (df_concat['Flavour']=='BLU')].index, 'Category'] = 'JAR BLU'
+        df_concat.loc[df_concat[(df_concat['Category'] == 'JAR') & (df_concat['Flavour']=='GOLD')].index, 'Category'] = 'JAR GOLD'
+        df_concat.loc[df_concat[(df_concat['Category'] == 'JAR') & (df_concat['Flavour'].isin(['PARMESAN &ROMANO CHEESE', 
+                                                                                                    'PARMESAN CHEESE', 
+                                                                                                    'ROMANO CHEESE',
+                                                                                                    'PARMESAN&ROMANO&ASIAGO CHEESE', 
+                                                                                                    'NOT AVAILABLE',
+                                                                                                    'PECORINO/PECORINO ROMANO CHEESE', 
+                                                                                                    'OTHER FLAVOUR']))].index, 'Category'] = 'JAR OTHER'
+        
+        df_new_price = pd.DataFrame()
+        df_concat = df_concat.replace(to_replace='ERR', value=None)
+        for i, group in df_concat.groupby(['Channel', 'Category', 'Sub Category', 'Brand', 'Promo']):
+            def fn(r):
+                s = r.iloc[0, :]
+                if sum(r["Sales in volume"]) != 0:
+                    s["Price per volume"] = sum(r["Sales in volume"] * r["Price per volume"])/sum(r["Sales in volume"])
+                else :
+                    s["Price per volume"] = None
+                s["Sales in volume"] = r["Sales in volume"].sum()
+                s["Sales in value"] = r["Sales in value"].sum()
+                s["Distribution"] = r["Distribution"].mean()
+                return s
+            df_bcs = group.groupby("Date").apply(lambda x: fn(x))
+            df_new_price = pd.concat([df_new_price, df_bcs])
+        
+        df_modern = df_new_price[df_new_price["Channel"]=="MODERN TRADE"]
+        df_trad = df_new_price[df_new_price["Channel"]=="TRADITIONAL TRADE"]
+        print(df_modern.shape)
+        print(df_trad.shape)
         self.add_df_channel(key='modern', df=df_modern)
-        self.add_df_channel(key='df_trad', df=df_trad)
+        self.add_df_channel(key='trad', df=df_trad)
         
-        self._df = df_concat
+        self._df = df_new_price
 
 
     def fill_df_bel(self, json_sell_out_params):
