@@ -1,4 +1,5 @@
 import datetime as dt
+from itertools import count
 
 import pandas as pd
 
@@ -33,21 +34,21 @@ class DM_FR(DataManager):
         )
 
         #AD HOC SPECIALITE
-        df.loc[df[(df['Sub Category'].isin(['AOR REGIONAL'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'AOR REGIONAL'
+        df.loc[df[(df['Sub Category'].isin(['AOR REGIONAL'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'SPECIALITE AOR REGIONAL'
         df.loc[df[(df['Sub Category'].isin(['SPECIALITE A GOUT DOUX'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'SPECIALITE A GOUT DOUX'
 
         #AD HOC FRAIS A TARTINER
-        df.loc[df[(df['Sub Category'].isin(['ARO'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'ARO'
-        df.loc[df[(df['Sub Category'].isin(['NATURE'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'NATURE'
+        df.loc[df[(df['Sub Category'].isin(['ARO'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'FRAIS A TARTINER ARO'
+        df.loc[df[(df['Sub Category'].isin(['NATURE'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'FRAIS A TARTINER NATURE'
 
         #AD HOC ENFANT
-        df.loc[df[(df['Sub Category'].isin(['A TARTINER'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'A TARTINER'
-        df.loc[df[(df['Sub Category'].isin(['NOMADE'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'NOMADE'
+        df.loc[df[(df['Sub Category'].isin(['A TARTINER'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'ENFANT A TARTINER'
+        df.loc[df[(df['Sub Category'].isin(['NOMADE'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'ENFANT NOMADE'
 
         #AD HOC TRANCHE A FROID
-        df.loc[df[(df['Sub Category'].isin(['A GOUT'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'A GOUT'
-        df.loc[df[(df['Sub Category'].isin(['CHEVRE&BREBIS'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'CHEVRE&BREBIS'
-        df.loc[df[(df['Sub Category'].isin(['ORIGINAL'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'ORIGINAL'
+        df.loc[df[(df['Sub Category'].isin(['A GOUT'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'TRANCHE A FROID A GOUT'
+        df.loc[df[(df['Sub Category'].isin(['CHEVRE&BREBIS'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'TRANCHE A FROID CHEVRE&BREBIS'
+        df.loc[df[(df['Sub Category'].isin(['ORIGINAL'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'TRANCHE A FROID ORIGINAL'
 
         df = df[df.Date < json_sell_out_params.get(self._country).get("date_max")]
         for channel, group in df.groupby("Channel", as_index=False):
@@ -76,6 +77,7 @@ class DM_FR(DataManager):
                         "Price per volume",
                         "Sales in volume",
                         "Sales in value",
+                        "Sales volume with promo",
                         "Distribution",
                     ]
                 ]
@@ -84,10 +86,13 @@ class DM_FR(DataManager):
                         "Price per volume": "mean",
                         "Sales in volume": "sum",
                         "Sales in value": "sum",
+                        "Sales volume with promo":"sum",
                         "Distribution": "mean",
                     }
                 )
             )
+
+            df_bel["Promo Cost"] = df_bel["Sales volume with promo"] / df_bel["Sales in volume"]
 
             PATH_FINANCE = (
                 json_sell_out_params.get(self._country)
@@ -115,11 +120,15 @@ class DM_FR(DataManager):
                 .get("country_name")
             )
             df_finance = self.fill_Finance(
-                path=PATH_FINANCE,
-                finance_cols=FINANCE_COLS,
-                finance_renaming_columns=FINANCE_RENAMING_COLS,
-                header=FINANCE_HEADER,
+                json_sell_out_params=json_sell_out_params,
+                country=self._country
             )
+            # df_finance = self.fill_Finance(
+            #     path=PATH_FINANCE,
+            #     finance_cols=FINANCE_COLS,
+            #     finance_renaming_columns=FINANCE_RENAMING_COLS,
+            #     header=FINANCE_HEADER,
+            # )
             df_finance = self.compute_Finance(
                 df_finance, AP_CODES, DATE_MIN, DATE_MAX, country_name=COUNTRY_NAME
             )
