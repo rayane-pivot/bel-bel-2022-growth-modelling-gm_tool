@@ -16,19 +16,15 @@ def main():
     country = "KSA"
     data_manager = DM_KSA()
     data_manager.ad_hoc_KSA(json_sell_out_params)
-    #data_manager.fill_df_bel(json_sell_out_params)
-
-    # data_manager.load('view/USA_df_post_processing.xlsx')
-    print(data_manager.get_df().shape)
-    print(data_manager.get_df().head())
-    # print(data_manager.get_df_bel().shape)
-
-
-    for channel, df in data_manager.get_df_channels().items():
-        df.to_excel(f"view/KSA/KSA_{channel}_df_1503.xlsx", index=False)
-
-    data_manager.get_df().to_excel('view/KSA/KSA_df_1503.xlsx', index=False)
-    # data_manager.get_df_bel().to_excel('view/USA_df_bel_0303.xlsx')
+    data_manager.fill_df_bel(json_sell_out_params)
+    
+    # for channel, df in data_manager.get_df_channels().items():
+    #     df.to_excel(f"view/KSA/KSA_{channel}_df_1603.xlsx", index=False)
+    
+    # for channel, df_bel in data_manager.get_df_bel_channels().items():
+    #     df_bel.to_excel(f"view/KSA/KSA_{channel}_df_bel_1603.xlsx", index=False)
+    
+    
     model = Model()
     year1 = json_sell_out_params.get("KSA").get("brand_positioning_matrix").get("year1")
     year2 = json_sell_out_params.get("KSA").get("brand_positioning_matrix").get("year2")
@@ -42,6 +38,18 @@ def main():
                                                                       year1=year1,
                                                                       year2=year2)
 
-        brand_positioning_matrix.to_excel(f'view/KSA/KSA_{channel}_brand_positioning_matrix_1503.xlsx')
+        # brand_positioning_matrix.to_excel(f'view/KSA/KSA_{channel}_brand_positioning_matrix_1603.xlsx')
+    
+    for channel in data_manager.get_df_channels().keys():
+        attack_init_state = model.compute_attack_init_state(
+            df=data_manager.get_df_by_channel(channel),
+            df_bel=data_manager.get_df_bel_by_channel(channel),
+            json_sell_out_params=json_sell_out_params,
+            country="KSA",
+            )
+
+        attack_init_state.to_excel(
+            f"view/KSA/KSA_{channel}_attack_init_state_1603.xlsx", index=False
+        )
 if __name__ == "__main__":
     main()

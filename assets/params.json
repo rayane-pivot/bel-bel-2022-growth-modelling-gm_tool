@@ -312,8 +312,8 @@
         "_comment":{},
         "dict_path" : {
             "PATH_SALES": {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Sell-Out Data (Nielsen) All.xlsx"},
-            "PATH_INNO" : {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Sell-Out Data (IRI) Rate Of Innovation.xlsx"},
-            "PATH_FINANCE" : {"Total Country":"data/KSA/"},
+            "PATH_INNO" : {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Sell-Out Data (IRI) Rate Of Innovation_CONSOLIDATED.xlsx"},
+            "PATH_FINANCE" : {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Local Finance Data (SAP - Flux Rio) - Consolidated.xlsx"},
             "PATH_PROMO_COST" : {"Total Country":"data/KSA/"},
             "PATH_HH_INDEX" : {"Total Country":""}
             },
@@ -382,7 +382,7 @@
         "drop_levels":0,
         "sales_col_names":["Unnamed: 0", "FB CHEESE TYP", "FB CHEESE SEGMNT", "FB BRAND", "Channel"],
         "source":"Nielsen",
-        "bel_brands":["LAVACHEQUIRIT", "KIRI", "JIBNET ABOU AL WALAD"],
+        "bel_brands":["LA VACHE QUI RIT", "KIRI", "JIBNET ABOU AL WALAD"],
         "dates":{
             "2018": {"Min": "2018-01-01", "Max": "2019-01-01"},
             "2019": {"Min": "2019-01-01", "Max": "2020-01-01"}, 
@@ -402,22 +402,19 @@
         "Finance":{
            "header":[0],
            "finance_codes_to_brands" : {
-               "000BQ":"BOURSIN", 
-               "000LA":"LA VACHE QUI RIT", 
-               "004LA":"LA VACHE QUI RIT", 
-               "000MB":"MINI BABYBEL", 
-               "003NHDP":"NURISHH", 
-               "000KEPC":"KIRI"
+            "000KE" : "KIRI",
+            "000LA" : "LA VACHE QUI RIT",
+            "000RB" : "JIBNET ABOU AL WALAD"
             }
         },
         "Inno":{
             "header":[4],
             "date_beg":"2019-01",
-            "innovation_duration":104,
+            "innovation_duration":24,
             "brand_column_name" : "Brand",
-            "week_name" : "",
+            "week_name" : "20",
             "date_format":"%b %Y",
-            "columns_to_remove":["Item", "SubCategory", "Segment", "SubSegment"]
+            "columns_to_remove":["Item", "SubCategory", "Segment", "SubSegment", "Time", "Category"]
         },
         "Promo Cost":{
             "renaming_brands" : {

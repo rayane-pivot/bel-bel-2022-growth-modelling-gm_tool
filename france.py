@@ -15,11 +15,11 @@ def main():
     data_manager.ad_hoc_FR(json_sell_out_params)
     data_manager.fill_df_bel(json_sell_out_params)
 
-    for channel, df in data_manager.get_df_channels().items():
-        df.to_excel(f"view/France/FRANCE_NEW/FR_{channel}_df_1403.xlsx", index=False)
+    # for channel, df in data_manager.get_df_channels().items():
+    #     df.to_excel(f"view/France/FR_{channel}_df_1603.xlsx", index=False)
     
-    for channel, df_bel in data_manager.get_df_bel_channels().items():
-        df_bel.to_excel(f"view/France/FRANCE_NEW/FR_{channel}_df_bel_1403.xlsx", index=False)
+    # for channel, df_bel in data_manager.get_df_bel_channels().items():
+    #     df_bel.to_excel(f"view/France/FR_{channel}_df_bel_1603.xlsx", index=False)
     
     model = M_FR()
 
@@ -36,7 +36,7 @@ def main():
                                                                       year1=year1,
                                                                       year2=year2)
 
-        # brand_positioning_matrix.to_excel(f'view/France/FRANCE_NEW/FR_{channel}_brand_positioning_matrix_1403.xlsx')
+        # brand_positioning_matrix.to_excel(f'view/France/FR_{channel}_brand_positioning_matrix_1603.xlsx')
 
     # for channel, df in data_manager.get_df_channels().items():
     #     brand_scorecard = model.compute_brand_scorecard(df,
@@ -48,14 +48,14 @@ def main():
 
     for channel in data_manager.get_df_channels().keys():
         attack_init_state = model.compute_attack_init_state(
-            df=data_manager.get_df_by_channel(channel),
-            df_bel=data_manager.get_df_bel_by_channel(channel),
-            json_sell_out_params=json_sell_out_params,
-            country="FR",
-        )
+                df=data_manager.get_df_by_channel(channel),
+                df_bel=data_manager.get_df_bel_by_channel(channel),
+                json_sell_out_params=json_sell_out_params,
+                country="FR",
+            )
 
         # attack_init_state.to_excel(
-        #     f"view/France/FRANCE_NEW/FR_{channel}_attack_init_state_1403.xlsx", index=False
+        #     f"view/France/FR_{channel}_attack_init_state_1603.xlsx", index=False
         # )
 
     # df_brand_scaled, df_category_scaled, df_market_brand_scaled, capacity_to_win = model.compute_Capacity_to_Win(
