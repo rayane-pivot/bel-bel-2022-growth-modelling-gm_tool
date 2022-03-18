@@ -38,7 +38,7 @@ def main():
                                                                       year1=year1,
                                                                       year2=year2)
 
-        # brand_positioning_matrix.to_excel(f'view/KSA/KSA_{channel}_brand_positioning_matrix_1603.xlsx')
+        brand_positioning_matrix.to_excel(f'view/KSA/KSA_{channel}_brand_positioning_matrix_1703.xlsx')
     
     for channel in data_manager.get_df_channels().keys():
         attack_init_state = model.compute_attack_init_state(
@@ -48,8 +48,8 @@ def main():
             country="KSA",
             )
 
-        attack_init_state.to_excel(
-            f"view/KSA/KSA_{channel}_attack_init_state_1603.xlsx", index=False
-        )
+        # attack_init_state.to_excel(
+        #     f"view/KSA/KSA_{channel}_attack_init_state_1603.xlsx", index=False
+        # )
 if __name__ == "__main__":
     main()

@@ -129,6 +129,7 @@
             "APERICUBE",
             "BOURSIN",
             "BABYBEL",
+            "MINI BABYBEL",
             "LA VACHE QUI RIT",
             "KIRI",
             "PORT SALUT",
@@ -168,6 +169,7 @@
                 "APERICUBE":85,
                 "BOURSIN":88,
                 "BABYBEL":90,
+                "MINI BABYBEL":90,
                 "LA VACHE QUI RIT":91,
                 "KIRI":89,
                 "PORT SALUT":69,
@@ -311,7 +313,7 @@
     "KSA":{
         "_comment":{},
         "dict_path" : {
-            "PATH_SALES": {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Sell-Out Data (Nielsen) All.xlsx"},
+            "PATH_SALES": {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Sell-Out Data (Nielsen) All (1703).xlsx"},
             "PATH_INNO" : {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Sell-Out Data (IRI) Rate Of Innovation_CONSOLIDATED.xlsx"},
             "PATH_FINANCE" : {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Local Finance Data (SAP - Flux Rio) - Consolidated.xlsx"},
             "PATH_PROMO_COST" : {"Total Country":"data/KSA/"},
@@ -448,5 +450,96 @@
             "fragmentation n_brands":5,
             "inno_year_min":2020
         }
+    },
+    "GER":{
+        "_comment":{
+           "Total Country":"data/GER/Growth Modelling - GER - 2019-2021 - Sell-Out Data (IRI) without Hard Discount.xlsx"
+       },
+        "dict_path" :
+        {
+            "PATH_SALES":{
+                "Total Country":"data/GER/Growth Modelling - GER - 2019-2021 - Sell-Out Data (IRI) without Hard Discount.xlsx",
+                "Hard Discount":"data/GER/Growth Modelling - GER - 2019-2021 - Sell-Out Data (IRI) only Hard Discount.xlsx"
+                },
+           "PATH_INNO" : {"Total Country":"data/GER/Growth Modelling - GER - 2019-2021 - Sell-Out Data (IRI) Rate Of Innovation-FRSIEL12200.xlsx"},
+           "PATH_FINANCE" : {"Total Country":"data/GER/Growth Modelling - GER - 2018-2021 - Global Finance Data (SAP - Flux Rio).xlsx"}
+        },
+        "sales_renaming_columns":[
+            "Date",
+            "Product",
+            "Attribute",
+            "Category",
+            "Sub Category",
+            "Brand",
+            "Sales in value",
+            "Sales value with promo",
+            "Sales in volume",
+            "Sales volume with promo",
+            "Price per volume",
+            "Price with promo",
+            "Price without promo",
+            "Weighted Distribution",
+            "Distribution"
+       ],
+       "bel_brands": [
+           "ADLER",
+           "BONBEL",
+           "BOURSIN",
+           "BABYBEL",
+           "LA VACHE QUI RIT",
+           "KIRI",
+           "NURISHH"
+       ],
+        "sales_date_format":"%U %Y %w",
+        "date_format":"%Y-%m-%d",       
+        "header_lines":[7],
+        "sheet_name":["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
+        "source":"IRI",
+        "date_max":"2022-01-01",
+        "drop_levels":0,
+        "A&P_codes":["000AA - ADLER", "000BK - BONBEL", "000BQ - BOURSIN", "000BA - BABYBEL", "000MB - MINI BABYBEL", "000LA - THE LAUGHING COW", "000KE - KIRI", "003NH - NURISHH"],
+        "A&P_columns":["YEAR EPM", "MANAGERIAL EPM", "CODE EPM", "R4100 - ADVERTISING", "R4200 - PROMOTION - CONSUMERS", "R1000 - NET SALES", "MVC - Margin on variable costs"],
+        "finance_renaming_columns":["Year", "Country", "Brand", "Advertising", "Promotion", "Sell-in", "MVC"],
+        "dates_finance":{"Min": "2017-12-31", "Max": "2021-12-26"},
+        "Inno":{
+           "header":[7],
+           "date_beg":"2019-01-06",
+           "innovation_duration":104,
+           "brand_column_name" : "MARKE  [ MARKE ]",
+           "week_name":"W ",
+           "date_format_re":"%W %Y",
+           "date_format":"%U %Y %w",
+           "columns_to_remove":["Product", "WARENGRUPPE  [ WARENGRUPPE ]", "TEILMARKT  [ TEILMARKT ]"]
+       },
+       "Finance":{
+           "header":[17],
+           "country_name":"GERMANY COMMERCIAL"
+        },
+        "brand_positioning_matrix":{
+           "year1" : 2019,
+           "year2" : 2021,
+           "year_min" : 2019
+       },
+       "brand scorecard":{
+           "date_min":"2017-12-31",
+           "awareness":{
+               "ADLER":22.000,
+               "BONBEL":60.000,
+               "BOURSIN":16.000,
+               "BABYBEL":84.000,
+               "LA VACHE QUI RIT":24.000,
+               "KIRI":73.000,
+               "NURISHH":2.000
+           }
+           
+        },
+        "attack_init_state":{
+           "year":2021
+       },
+       "Capacity to Win":{
+           "year_min":2019,
+           "fragmentation n_brands":5,
+           "inno_year_min":2020
+       }
     }
  }
