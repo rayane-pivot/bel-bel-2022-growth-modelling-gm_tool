@@ -1,0 +1,190 @@
+import pandas as pd
+from prophet import Prophet
+from tqdm import tqdm
+
+
+class Forecast:
+    def __init__(self, periods, freq):
+        self.periods = periods
+        self.freq = freq
+
+    def forecasting_features(self, df, features_name, regressors=False, plot=False):
+        """Get long term forecasts for features giving the dataframe and periods
+
+        :param df:
+        :param features_name:
+        :param regressors:
+        :param plot:
+
+        """
+        # Select features except the target
+        list_df_features = []
+        for feature in tqdm(features_name, ascii=True, desc="Features"):
+
+            # Preprocessing Inputs of Prophet
+            df_frcast = df[["Date", feature]]
+            df_frcast.columns = ["ds", "y"]
+            df_frcast.ds = pd.to_datetime(df_frcast.ds)
+
+            if regressors:
+                df_frcast["cap"] = df[feature].max() * 3
+                df_frcast["floor"] = df[feature].mean() / 2
+
+                if (df_frcast["cap"] <= df_frcast["floor"]).any():
+                    df_frcast["cap"] = df_frcast.floor + 1
+
+                # Model
+                model = Prophet(growth="logistic", yearly_seasonality=20)
+            else:
+                model = Prophet()
+
+            model.fit(df_frcast)
+
+            # Periods is in months
+            future = model.make_future_dataframe(periods=self.periods, freq=self.freq)
+
+            if regressors:
+                future["cap"] = df_frcast["cap"][0]
+                future["floor"] = df_frcast["floor"][0]
+
+            fcst = model.predict(future[future.ds > df_frcast.ds.iloc[-1]])
+
+            # Plot forecast
+            if plot:
+                fig = model.plot(fcst)
+                ax = fig.gca()
+                ax.set_title(feature)
+
+            df_frcast.rename(columns={"y": feature}, inplace=True)
+            fcst.rename(columns={"yhat": feature}, inplace=True)
+            # Adding result to list
+            list_df_features.append(
+                pd.concat([df_frcast.iloc[:, :-2], fcst[["ds", feature]]])
+            )
+
+        # Merging the dataframes of each feature
+        df_features = list_df_features[0][["ds"]]
+        for dff in list_df_features:
+            df_features = pd.merge(df_features, dff, on="ds")
+
+        df_features.rename(columns={"ds": "Date"}, inplace=True)
+
+        return df_features
+
+    def forecasting_one_brand(self, df, brand_name, features_name, plot=False):
+        """Forecasting giving brand_name for giving number of periods and
+
+        :param df:
+        :param brand_name:
+        :param features_name:
+
+        """
+        # Get DataFrame for brand_name
+        df = (
+            df.groupby(["Brand", "Date"])
+            .agg("sum")
+            .loc[brand_name]
+            .reset_index()
+            .sort_values("Date")
+        )
+
+        # Predict long-term forecast for features
+        df_features = self.forecasting_features(df, features_name, regressors=True)
+
+        # Preprocessing dataframe for prophet
+        df["Date"] = pd.to_datetime(df.Date)
+        df = df[["Date", *features_name, "Sales in volume"]]
+        df.rename(columns={"Date": "ds", "Sales in volume": "y"}, inplace=True)
+
+        df["cap"] = df["y"].max() * 3
+        df["floor"] = df["y"].min() / 2
+        if (df["cap"] <= df["floor"]).any():
+            df["cap"] = df.floor + 1
+
+        # Instanciating Prophet Model
+        model = Prophet(growth="logistic", yearly_seasonality=20)
+
+        # Adding regressors
+        for feature in features_name:
+            model.add_regressor(feature)
+
+        # Fitting model
+        model.fit(df)
+
+        future = model.make_future_dataframe(periods=self.periods, freq=self.freq)
+
+        for feature in features_name:
+            future[feature] = df_features[feature]
+
+        future["cap"] = df["cap"][0]
+        future["floor"] = df["floor"][0]
+
+        # Predicting sales forecasts
+        fcst = model.predict(future[future.ds > df.ds.iloc[-1]])
+
+        # Plot forecast
+        if plot:
+            fig = model.plot(fcst)
+            ax = fig.gca()
+            ax.set_title(brand_name)
+
+        fcst.rename(columns={"yhat": "y"}, inplace=True)
+        df_brand_fcst = pd.concat([df[["ds", "y"]], fcst[["ds", "y"]]])
+        df_brand_fcst.rename(columns={"ds": "Date", "y": brand_name}, inplace=True)
+
+        return future, df_brand_fcst
+
+    def forecasting_brands_with_regressors(self, df, brands_name, features_name):
+        """Forecasting a list of brands using the given features and periods
+
+        :param df:
+        :param brands_name:
+        :param features_name:
+
+        """
+        dict_feats_futures = {}
+        list_df_brands = []
+        # Compute forecast for each brand
+        for brand in tqdm(brands_name, ascii=True, desc="Brands"):
+            future, brand_fcst = self.forecasting_one_brand(df, brand, features_name)
+            dict_feats_futures[brand] = future
+            list_df_brands.append(brand_fcst)
+
+        # Merge results of each brand
+        df_brands_fcst = list_df_brands[0].Date
+        for df_tmp in list_df_brands:
+            df_brands_fcst = pd.merge(df_brands_fcst, df_tmp, on="Date", how="outer")
+
+        return dict_feats_futures, df_brands_fcst
+
+    def forecasting_categories(self, df, categories_name):
+        """Forecasting list of markets for the given periods
+
+        :param df:
+        :param categories_name:
+
+        """
+        df_features = self.forecasting_features(df, categories_name)
+
+        return df_features
+
+    def forecasting_brand_no_regressors(self, df_bel):
+        """TODO describe function
+
+        :param df_bel:
+        :returns:
+
+        """
+        df_bel_brands = (
+            df_bel.groupby(["Date", "Brand"])
+            .agg("sum")["Sales in volume"]
+            .unstack()
+            .reset_index()
+        )
+        df_bel_brands.columns.name = ""
+        df_bel_brands = df_bel_brands.fillna(0)
+        df_bel_brands_fcst = self.forecasting_features(
+            df_bel_brands, list(df_bel_brands.columns[1:])
+        )
+
+        return df_bel_brands_fcst

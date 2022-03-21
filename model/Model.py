@@ -7,6 +7,9 @@ import pandas as pd
 
 
 class Model:
+    def __init__(self):
+        pass
+
     def brand_pos(self, df, year_min: int):
         """Brand Positioning Matrix
         pivot df to return Brand/Category/Sales in volume
