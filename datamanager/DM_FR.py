@@ -1,4 +1,5 @@
 import datetime as dt
+from itertools import count
 
 import pandas as pd
 
@@ -13,10 +14,11 @@ class DM_FR(DataManager):
     _df_bel_channels = dict()
 
     def ad_hoc_FR(self, json_sell_out_params):
-        """TODO describe function
+        """Call fill_df from parent class
+        format dataframe for use in Model
 
-        :param json_sell_out_params:
-        :returns:
+        :param json_sell_out_params: json params dict
+        :returns: None
 
         """
         df = super().fill_df(json_sell_out_params, self._country)
@@ -31,22 +33,22 @@ class DM_FR(DataManager):
             lambda x: dt.datetime.strptime(x[-10:], "%d-%m-%Y").strftime("%Y-%m-%d")
         )
 
-        # #AD HOC SPECIALITE
-        # df.loc[df[(df['Sub Category'].isin(['AOR REGIONAL'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'AOR REGIONAL'
-        # df.loc[df[(df['Sub Category'].isin(['SPECIALITE A GOUT DOUX'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'SPECIALITE A GOUT DOUX'
+        #AD HOC SPECIALITE
+        df.loc[df[(df['Sub Category'].isin(['AOR REGIONAL'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'SPECIALITE AOR REGIONAL'
+        df.loc[df[(df['Sub Category'].isin(['SPECIALITE A GOUT DOUX'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'SPECIALITE A GOUT DOUX'
 
-        # #AD HOC FRAIS A TARTINER
-        # df.loc[df[(df['Sub Category'].isin(['ARO'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'ARO'
-        # df.loc[df[(df['Sub Category'].isin(['NATURE'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'NATURE'
+        #AD HOC FRAIS A TARTINER
+        df.loc[df[(df['Sub Category'].isin(['ARO'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'FRAIS A TARTINER ARO'
+        df.loc[df[(df['Sub Category'].isin(['NATURE'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'FRAIS A TARTINER NATURE'
 
-        # #AD HOC ENFANT
-        # df.loc[df[(df['Sub Category'].isin(['A TARTINER'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'A TARTINER'
-        # df.loc[df[(df['Sub Category'].isin(['NOMADE'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'NOMADE'
+        #AD HOC ENFANT
+        df.loc[df[(df['Sub Category'].isin(['A TARTINER'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'ENFANT A TARTINER'
+        df.loc[df[(df['Sub Category'].isin(['NOMADE'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'ENFANT NOMADE'
 
-        # #AD HOC TRANCHE A FROID
-        # df.loc[df[(df['Sub Category'].isin(['A GOUT'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'A GOUT'
-        # df.loc[df[(df['Sub Category'].isin(['CHEVRE&BREBIS'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'CHEVRE&BREBIS'
-        # df.loc[df[(df['Sub Category'].isin(['ORIGINAL'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'ORIGINAL'
+        #AD HOC TRANCHE A FROID
+        df.loc[df[(df['Sub Category'].isin(['A GOUT'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'TRANCHE A FROID A GOUT'
+        df.loc[df[(df['Sub Category'].isin(['CHEVRE&BREBIS'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'TRANCHE A FROID CHEVRE&BREBIS'
+        df.loc[df[(df['Sub Category'].isin(['ORIGINAL'])) & (~df['Category'].isin(['ALTERNATIVE VEGETALE']))].index, 'Category'] = 'TRANCHE A FROID ORIGINAL'
 
         df = df[df.Date < json_sell_out_params.get(self._country).get("date_max")]
         for channel, group in df.groupby("Channel", as_index=False):
@@ -54,10 +56,10 @@ class DM_FR(DataManager):
         self._df = df
 
     def fill_df_bel(self, json_sell_out_params):
-        """TODO describe function
+        """Build df_bel
 
-        :param json_sell_out_params:
-        :returns:
+        :param json_sell_out_params: json params dict
+        :returns: None
 
         """
         assert not self._df.empty, "df is empty, call ad_hoc_USA() or load() first"
@@ -75,6 +77,7 @@ class DM_FR(DataManager):
                         "Price per volume",
                         "Sales in volume",
                         "Sales in value",
+                        "Sales volume with promo",
                         "Distribution",
                     ]
                 ]
@@ -83,10 +86,13 @@ class DM_FR(DataManager):
                         "Price per volume": "mean",
                         "Sales in volume": "sum",
                         "Sales in value": "sum",
+                        "Sales volume with promo":"sum",
                         "Distribution": "mean",
                     }
                 )
             )
+
+            df_bel["Promo Cost"] = df_bel["Sales volume with promo"] / df_bel["Sales in volume"]
 
             PATH_FINANCE = (
                 json_sell_out_params.get(self._country)
@@ -114,11 +120,15 @@ class DM_FR(DataManager):
                 .get("country_name")
             )
             df_finance = self.fill_Finance(
-                path=PATH_FINANCE,
-                finance_cols=FINANCE_COLS,
-                finance_renaming_columns=FINANCE_RENAMING_COLS,
-                header=FINANCE_HEADER,
+                json_sell_out_params=json_sell_out_params,
+                country=self._country
             )
+            # df_finance = self.fill_Finance(
+            #     path=PATH_FINANCE,
+            #     finance_cols=FINANCE_COLS,
+            #     finance_renaming_columns=FINANCE_RENAMING_COLS,
+            #     header=FINANCE_HEADER,
+            # )
             df_finance = self.compute_Finance(
                 df_finance, AP_CODES, DATE_MIN, DATE_MAX, country_name=COUNTRY_NAME
             )
@@ -178,7 +188,7 @@ class DM_FR(DataManager):
     def compute_Finance(
         self, df_finance, aandp_codes, date_min, date_max, country_name: str
     ):
-        """TODO describe function
+        """Many things done here, gl debugging it
 
         :param df_finance:
         :param aandp_codes:
@@ -247,7 +257,7 @@ class DM_FR(DataManager):
         ]
 
     def compute_Inno(self, df, date_begining: str, innovation_duration: int):
-        """TODO describe function
+        """Compute Innovation
 
         :param df:
         :param date_begining:
@@ -299,25 +309,25 @@ class DM_FR(DataManager):
         return df_concat[["Brand", "Date", "Rate of Innovation"]]
 
     def get_df_channels(self):
-        """TODO describe function
+        """get dict of df with channels as keys
 
-        :returns:
+        :returns: df_channels
 
         """
         return self._df_channels
 
     def get_df_by_channel(self, channel):
-        """TODO describe function
+        """get df from df_channels with channel as key
 
         :param channel:
-        :returns:
+        :returns: df
 
         """
         assert channel in self.get_df_channels().keys(), f"{channel} not in df_channels"
         return self.get_df_channels().get(channel)
 
     def add_df_channel(self, key, df):
-        """TODO describe function
+        """add df in df_channels at key
 
         :param key:
         :param df:
@@ -327,7 +337,7 @@ class DM_FR(DataManager):
         self._df_channels[key] = df
 
     def get_df_bel_channels(self):
-        """TODO describe function
+        """
 
         :returns:
 
@@ -335,7 +345,7 @@ class DM_FR(DataManager):
         return self._df_bel_channels
 
     def get_df_bel_by_channel(self, channel):
-        """TODO describe function
+        """
 
         :param channel:
         :returns:
@@ -347,7 +357,7 @@ class DM_FR(DataManager):
         return self.get_df_bel_channels().get(channel)
 
     def add_df_bel_channel(self, key, df):
-        """TODO describe function
+        """
 
         :param key:
         :param df:
