@@ -30,9 +30,9 @@
          "bel_brands":["BABYBEL", "THE LAUGHING COW", "BOURSIN", "KAUKAUNA", "MERKTS", "PRICES", "NURISHH"],
          "dates":{
              "2018": {"Min": "2018-01-01", "Max": "2019-01-01"},
-             "2019": {"Min": "2019-01-01", "Max": "2020-01-01"}, 
-             "2020": {"Min": "2020-01-01", "Max": "2021-01-01"}, 
-             "2021": {"Min": "2021-01-01", "Max": "2022-01-01"}, 
+             "2019": {"Min": "2019-01-01", "Max": "2020-01-01"},
+             "2020": {"Min": "2020-01-01", "Max": "2021-01-01"},
+             "2021": {"Min": "2021-01-01", "Max": "2022-01-01"},
              "HISTORY": {"Min": "2018-01-01", "Max": "2022-01-01"}
              },
          "dates_finance":{"Min": "2017-12-31", "Max": "2021-12-26"},
@@ -58,9 +58,9 @@
          },
          "Promo Cost":{
              "renaming_brands" : {
-                "BOURSIN":"BOURSIN", 
-                "Laughing Cow": "THE LAUGHING COW", 
-                "Mini Babybel": "BABYBEL", 
+                "BOURSIN":"BOURSIN",
+                "Laughing Cow": "THE LAUGHING COW",
+                "Mini Babybel": "BABYBEL",
                 "Prices": "PRICES",
                 "Nurishh": "NURISHH",
                 "Kaukauna": "KAUKAUNA",
@@ -75,11 +75,11 @@
             "date_min":"2017-12-31",
             "awareness":{
                 "BABYBEL":68.0000,
-                "BOURSIN":29.0000, 
-                "KAUKAUNA":15.0000, 
-                "MERKTS":8.0000, 
-                "NURISHH":6.0000, 
-                "PRICES":7.0000, 
+                "BOURSIN":29.0000,
+                "KAUKAUNA":15.0000,
+                "MERKTS":8.0000,
+                "NURISHH":6.0000,
+                "PRICES":7.0000,
                 "THE LAUGHING COW":72.0000
             }
          },
@@ -101,7 +101,7 @@
          "dict_path" :
          {
              "PATH_SALES":{
-                 "Total GMS":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Total GMS.xlsx", 
+                 "Total GMS":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Total GMS.xlsx",
                  "Concepts HMSM":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Concepts HMSM.xlsx",
                  "Ecommerce":"data/France/Growth Modelling - FR - 2019-2021 - Panel Data (IRI) - Ecommerce.xlsx"
                  },
@@ -172,7 +172,7 @@
                 "COUSTERON":50,
                 "NURISHH":1
             }
-            
+
          },
          "attack_init_state":{
             "year":2021

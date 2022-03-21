@@ -228,3 +228,36 @@ class DataManager:
             not self._df_bel.empty
         ), "df_bel is empty, call fill_df_bel() or load_df_bel() first"
         return self._df_bel
+
+    def get_df_competition_brands(self, df, features, brands_name, bel_markets):
+        """Get the dataframe of all the other brands except the given ones with
+
+        :param df:
+        :param features:
+        :param brands_name:
+        :param bel_markets:
+
+        """
+
+        df_res = df[~(df.Brand.isin(brands_name)) & (df.Category.isin(bel_markets))][
+            features
+        ]
+        df_res = df_res.fillna(0)
+
+        return df_res
+
+    def get_df_markets(self, df):
+        """Get Markets dataframe
+
+        :param df:
+
+        """
+        df_res = (
+            df.groupby(["Category", "Date"]).agg("sum")[["Sales in volume"]].unstack(0)
+        )
+        df_res = df_res.droplevel(level=0, axis=1).reset_index()
+        df_res["TOTAL CHEESE"] = df_res.iloc[:, 1:].sum(axis=1)
+        df_res = df_res.fillna(0)
+        df_res.columns.name = ""
+
+        return df_res
