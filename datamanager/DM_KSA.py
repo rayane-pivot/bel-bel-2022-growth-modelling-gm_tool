@@ -18,7 +18,7 @@ class DM_KSA(DataManager):
             if sum(r["Sales in volume"]) != 0:
                 s["Price per volume"] = sum(r["Sales in volume"] * r["Price per volume"])/sum(r["Sales in volume"])
             else :
-                s["Price per volume"] = None
+                s["Price per volume"] = np.nan
             s["Sales in volume"] = r["Sales in volume"].sum()
             s["Sales in value"] = r["Sales in value"].sum()
             s["Distribution"] = r["Distribution"].mean()
@@ -28,9 +28,9 @@ class DM_KSA(DataManager):
             if r.shape[0] == 1:
                 return r
             #else there is promo and no promo:
-            s = r[r.Promo=="NO PROMOTION"]
+            s = r[r.Promo=="NO PROMO"]
             s.loc[:, ["Sales in volume", "Sales in value", "Price per volume"]] = r.loc[:, ["Sales in volume", "Sales in value", "Price per volume"]].sum().values
-            s.loc[:, ["Sales volume with promo", "Sales value with promo", "Price with promo"]] = r[r.Promo=="PROMOTION"].loc[:, ["Sales in volume", "Sales in value", "Price per volume"]].values
+            s.loc[:, ["Sales volume with promo", "Sales value with promo", "Price with promo"]] = r[r.Promo=="PROMO"].loc[:, ["Sales in volume", "Sales in value", "Price per volume"]].values
             return s
 
         df = super().fill_df(json_sell_out_params, self._country)
@@ -65,6 +65,7 @@ class DM_KSA(DataManager):
         df_concat.loc[df_concat[(df_concat['Category'] == 'PORTIONS') & (df_concat['Sub Category']=='BAGS')].index, 'Category'] = 'PORTIONS OTHER'
         df_concat.loc[df_concat[(df_concat['Category'] == 'PORTIONS') & (df_concat['Sub Category']=='SLICES')].index, 'Category'] = 'PORTIONS OTHER'
         df_concat.loc[df_concat[(df_concat['Category'] == 'PORTIONS') & (df_concat['Sub Category']=='TRAY')].index, 'Category'] = 'PORTIONS OTHER'
+        df_concat.loc[df_concat[(df_concat['Category'] == 'PORTIONS') & (df_concat['Sub Category']=='STICK')].index, 'Category'] = 'PORTIONS OTHER'
         df_concat.loc[df_concat[(df_concat['Category'] == 'PORTIONS') & (df_concat['Sub Category']=='SQUARE PORTION')].index, 'Category'] = 'PORTIONS SQUARE'
         
         
@@ -77,29 +78,28 @@ class DM_KSA(DataManager):
                                                                                                     'PARMESAN&ROMANO&ASIAGO CHEESE', 
                                                                                                     'NOT AVAILABLE',
                                                                                                     'PECORINO/PECORINO ROMANO CHEESE', 
-                                                                                                    'OTHER FLAVOUR']))].index, 'Category'] = 'JAR OTHER'
+                                                                                                    'OTHER FLAVOUR', 'FETTA CHEESE']))].index, 'Category'] = 'JAR OTHER'
         
         df_concat.loc[df_concat[df_concat['Brand'] == 'LAVACHEQUIRIT'].index, 'Brand'] = 'LA VACHE QUI RIT'
-        
         df_new_price = pd.DataFrame()
-        df_concat = df_concat.replace(to_replace='ERR', value=None)
-        for i, group in df_concat.groupby(['Channel', 'Category', 'Sub Category', 'Brand', 'Promo']):
+        df_concat = df_concat.replace(to_replace='ERR', value=np.nan)
+        for _, group in df_concat.groupby(['Channel', 'Category', 'Sub Category', 'Brand', 'Promo']):
             df_bcs = group.groupby("Date").apply(lambda x: weighted_price(x))
             df_new_price = pd.concat([df_new_price, df_bcs])
         
         df_new_price = df_new_price.reset_index(drop=True)
-
         df_concat_promo = pd.DataFrame()
-        df_new_price[["Sales volume with promo", "Sales value with promo", "Price with promo"]] = None
-        for unique_brand_tuple, group in df_new_price.groupby(["Channel", "Category", "Sub Category", "Brand"]):
+        df_new_price[["Sales volume with promo", "Sales value with promo", "Price with promo"]] = np.nan
+        for _, group in df_new_price.groupby(["Channel", "Category", "Sub Category", "Brand"]):
             df_promo = group.groupby("Date").apply(lambda x:to_promo(x)).reset_index(drop=True)
             df_concat_promo = pd.concat([df_concat_promo, df_promo])
-
+        
         df_modern = df_concat_promo[df_concat_promo["Channel"]=="MODERN TRADE"]
         df_trad = df_concat_promo[df_concat_promo["Channel"]=="TRADITIONAL TRADE"]
-        print(df_concat_promo.shape)
-        print(df_modern.shape)
-        print(df_trad.shape)
+    
+        print(f"<ad_hoc_KSA> shape of total df : {df_concat_promo.shape}")
+        print(f"<ad_hoc_KSA> shape of modern : {df_modern.shape}")
+        print(f"<ad_hoc_KSA> shape of traditional : {df_trad.shape}")
         self.add_df_channel(key='modern', df=df_modern)
         self.add_df_channel(key='trad', df=df_trad)
         
@@ -239,7 +239,7 @@ class DM_KSA(DataManager):
         return df_finance
 
     def compute_finance(self, df_finance):
-        df_finance = df_finance.replace(['    '], None)
+        df_finance = df_finance.replace(['    '], np.nan)
         df_finance = df_finance.fillna(0.0)
         
         df_finance["Advertising"] = df_finance["Advertising"].abs()
@@ -349,7 +349,6 @@ class DM_KSA(DataManager):
                 try:
                     first_sale = group.T[col][pd.notna(group.T[col])].index.values[0]
                 except Exception:
-                    print(col)
                     first_sale = date_begining
                 if first_sale == date_begining:
                     pass
