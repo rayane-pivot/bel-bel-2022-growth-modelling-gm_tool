@@ -210,12 +210,9 @@ class DM_FR(DataManager):
             lambda x: x.split(sep="-")[-1].strip()
         )
         #### ADHOC FOR PRICES and BABYBEL
-        df_finance["Brand"] = df_finance["Brand"].apply(
-            lambda x: "PRICES" if x == "PRICE'S" else x
-        )
-        df_finance["Brand"] = df_finance["Brand"].apply(
-            lambda x: "BABYBEL" if x == "MINI BABYBEL" else x
-        )
+        # df_finance["Brand"] = df_finance["Brand"].apply(
+        #     lambda x: "BABYBEL" if x == "MINI BABYBEL" else x
+        # )
         df_finance = df_finance.fillna(0.0)
         # Months to week
         df_finance["number of weeks"] = df_finance.apply(
