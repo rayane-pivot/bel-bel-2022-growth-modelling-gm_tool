@@ -33,8 +33,12 @@ class DM_GER(DataManager):
         #AD HOC SNACK
         df.loc[df[df['Attribute'] == 'SNACK'].index, 'Category'] = 'SNACK'
         
+        #AD HOC HOT CHEESE
+        df.loc[df[df['Attribute'] == 'HOT CHEESE'].index, 'Category'] = 'HOT CHEESE'
+        
         #AD HOC VEGAN
-        df.loc[df[df['Attribute'] == 'VEGAN'].index, 'Category'] = 'VEGAN'
+        df.loc[df[df['Attribute'] == 'VEGAN HOT CHEESE'].index, 'Category'] = 'VEGAN HOT CHEESE'
+        df.loc[df[df['Attribute'] == 'VEGAN WITHOUT HOT CHEESE'].index, 'Category'] = 'VEGAN WITHOUT HOT CHEESE'
 
         #AD HOC ADLER
         df['Brand'] = df['Brand'].replace("ADLER EDELCREME", "ADLER")

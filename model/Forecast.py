@@ -10,6 +10,7 @@ from utils.tools import mean_absolute_percentage_error
 
 class Forecast:
     def __init__(self, country, data_manager, periods, freq, spath):
+        self.country = country
         self.dm = data_manager
         self.periods = periods
         self.freq = freq

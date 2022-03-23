@@ -16,8 +16,8 @@ from utils.trends import compute_trends
 PATH_TO_PARAMS = "assets/params.json"
 PATH_TO_OUTPUTS = "view/"
 
-pd.set_option("display.width", 1000)
-pd.set_option("max.columns", 1000)
+# pd.set_option("display.width", 1000)
+# pd.set_option("max.columns", 1000)
 
 
 def print_df_overview(df):

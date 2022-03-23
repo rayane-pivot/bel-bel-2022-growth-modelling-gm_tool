@@ -188,15 +188,17 @@ class Capacity_To_Win():
 
         def compute_expertise(df, df_bel):
             # Expertise = Questionnaire Bel (Match between Brand on Market) = un truc random
-            brands = df_bel.Brand.unique()
+            df_expertise = pd.read_excel("data/France/questionnaire.xlsx").set_index("Category")
+            # brands = df_bel.Brand.unique()
+            # # categories = df.Category.unique()
             # categories = df.Category.unique()
-            categories = df.Category.unique()
-            # return pd.DataFrame(np.random.randint(0, 100, size=(len(categories), len(brands))), columns=brands, index=categories)
-            return pd.DataFrame(
-                np.zeros((len(categories), len(brands))),
-                columns=brands,
-                index=categories,
-            )
+            # # return pd.DataFrame(np.random.randint(0, 100, size=(len(categories), len(brands))), columns=brands, index=categories)
+            # return pd.DataFrame(
+            #     np.zeros((len(categories), len(brands))),
+            #     columns=brands,
+            #     index=categories,
+            # )
+            return df_expertise
 
         df_corr = compute_corr_table(df, df_bel, method="pearson")
         df_price = compute_price(df, df_bel)
@@ -262,7 +264,7 @@ class Capacity_To_Win():
             df_category_scaled,
             df_brand_scaled,
             df_market_brand_scaled,
-            coefs={"category": 16, "brand": 12, "fit": 6},
+            # coefs={"category": 16, "brand": 12, "fit": 6},
         ):
             indexes = df_category_scaled.index.values
             nrows = df_category_scaled.shape[0]
@@ -281,17 +283,26 @@ class Capacity_To_Win():
                 ignore_index=True,
             )
             df_brand_scaled.index = indexes
-
             return (
-                (df_category_scaled / coefs["category"])
-                + (df_brand_scaled / coefs["brand"])
-                + (df_market_brand_scaled / coefs["fit"])
+                (df_category_scaled)
+                + (df_brand_scaled)
+                + (df_market_brand_scaled)
             )
+            # return (
+            #     (df_category_scaled / coefs["category"])
+            #     + (df_brand_scaled / coefs["brand"])
+            #     + (df_market_brand_scaled / coefs["fit"])
+            # )
 
         df_brand_scaled = scale_brand(df_brand)
         df_category_scaled = scale_category(df_category)
 
         df_market_brand_scaled = scale_market_brand(df_corr, df_price, df_expertise)
+        
+        # coefs={"category": 16, "brand": 12, "fit": 6},
+        df_brand_scaled = df_brand_scaled.div(16)
+        df_category_scaled = df_category_scaled.div(12)
+        df_market_brand_scaled = df_market_brand_scaled.div(6)
 
         capacity_to_win = compute_ctw(
             df_category_scaled=df_category_scaled,
@@ -315,8 +326,8 @@ class Capacity_To_Win():
         return (
             df_brand_scaled,
             df_category_scaled,
-            df_market_brand_scaled,
-            capacity_to_win,
+            df_market_brand_scaled.T,
+            capacity_to_win.T,
         )
 
     def compute_Capacity_to_Win(self, df, df_bel, json_sell_out_params, country: str):

@@ -5,6 +5,7 @@ import pandas as pd
 import re
 from datamanager.DataManager import DataManager
 from dateutil.relativedelta import *
+
 class DM_KSA(DataManager):
     """DataManager for KSA data"""
 
