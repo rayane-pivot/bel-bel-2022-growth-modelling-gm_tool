@@ -33,8 +33,7 @@ class DM_UK(DataManager):
                     "Price per volume",
                     "Sales in volume",
                     "Sales in value",
-                    "Sales volume with promo",
-                    "Distribution",
+                    "Sales volume with promo"
                 ]
             ]
             .agg(
@@ -43,30 +42,34 @@ class DM_UK(DataManager):
                     "Sales in volume": "sum",
                     "Sales in value": "sum",
                     "Sales volume with promo":"sum",
-                    "Distribution": "mean",
                 }
             )
         )
+        
+        df_bel_brands = df[df.Brand.isin(bel_brands)]
+        idx = df_bel_brands.groupby(["Date", "Brand"])['Sales in volume'].transform(max) == df_bel_brands["Sales in volume"]
+        df_bel_brands = df_bel_brands.loc[idx, ["Date", "Brand", "Distribution"]]
+
+        df_bel = pd.merge(df_bel, df_bel_brands, on=["Date", "Brand"], how="left")
+
         df_bel["Promo Cost"] = df_bel["Sales volume with promo"] / df_bel["Sales in volume"]
+        print(f'<fill_df_bel> shape of df_bel : {df_bel.shape}')
+        
+        df_finance = self.fill_finance_UK(json_sell_out_params)
+        df_finance = self.compute_Finance(df_finance, json_sell_out_params)
+        print(f'<fill_df_bel> shape of df_finance : {df_finance.shape}')
+        df_bel = pd.merge(df_bel, df_finance, on=["Date", "Brand"], how="left")
         print(f'<fill_df_bel> shape of df_bel : {df_bel.shape}')
 
         df_inno = self.fill_Inno_UK(json_sell_out_params)
         df_inno = self.compute_Inno(df_inno, json_sell_out_params)
         print(f'<fill_df_bel> shape of df_inno : {df_inno.shape}')
-        print(df_bel.head())
-        print(df_inno.head())
-        df_bel = pd.merge(df_bel, df_inno, on=["Date", "Brand"], how="outer")
+        df_bel = pd.merge(df_bel, df_inno, on=["Date", "Brand"], how="left")
         print(f'<fill_df_bel> shape of df_bel : {df_bel.shape}')
 
         self._df_bel = df_bel
 
     def fill_finance_UK(self, json_sell_out_params):
-        #ONLY FOR MVC
-        def code_to_brand(r):
-            for code, brand in ap_codes.items():
-                if code in r:
-                    return brand
-            return ""
         path = (
                 json_sell_out_params.get(self._country)
                 .get("dict_path")
@@ -76,16 +79,10 @@ class DM_UK(DataManager):
         header = (
                 json_sell_out_params.get(self._country).get("Finance").get("header")
             )
-        # ap_codes = json_sell_out_params.get(self._country).get("Finance").get("finance_codes_to_brands")
         sheet_names = json_sell_out_params.get(self._country).get("Finance").get("sheet_names")
-        print(f'{path= }')
-        print(f'{header= }')
-        # print(f'{ap_codes= }')
         df_finance = pd.read_excel(path, header=header, sheet_name=sheet_names)
         df_finance = pd.concat(df_finance.values(), axis=0)
-        # display(df_finance)
         df_finance = df_finance.set_index(["BRAND", "Source", "SKUS"]).stack(dropna=False).reset_index()
-        #print(df_finance.head())
         df_finance = df_finance.set_index(["BRAND", "SKUS", "level_3", "Source"]).unstack("Source").reset_index()
 
         df_finance = df_finance.reindex(columns=sorted(df_finance.columns, key=lambda x: x[::-1]))
@@ -98,11 +95,74 @@ class DM_UK(DataManager):
             "_SKUS" : "SKU",
             "_level_3" : "Date",
             "MVC_0" : "MVC",
-            "Advertising_0" : "Net Sales",
-            "Promotion_0" : "Sales Margin"
+            "Advertising_0" : "Advertising",
+            "Promotion_0" : "Promotion"
         }).reset_index(drop=True)
         df_finance.Date = pd.to_datetime(df_finance.Date, format="%b %Y").dt.strftime("%Y-%m")
         return df_finance
+    
+    def compute_Finance(
+        self,
+        df_finance,
+        json_sell_out_params
+    ):
+        """Many things done here, gl debugging it
+        """
+        date_min = json_sell_out_params.get(self._country).get("dates_finance").get("Min")
+        date_max = json_sell_out_params.get(self._country).get("dates_finance").get("Max")
+        
+        # ABS for Advertising and Promotion
+        df_finance["Advertising"] = df_finance["Advertising"].abs()
+        df_finance["Promotion"] = df_finance["Promotion"].abs()
+        
+        df_finance = df_finance.fillna(0.0)
+        df_finance["Year"] = pd.to_datetime(df_finance.Date, format="%Y-%m").dt.year
+        df_finance["Month"] = pd.to_datetime(df_finance.Date, format="%Y-%m").dt.month
+        df_finance = df_finance.drop(columns=["Date"])
+        # Months to week
+        df_finance["number of weeks"] = df_finance.apply(
+            lambda x: self.count_num_sundays_in_month(x.Year, x.Month), axis=1
+        )
+        df_finance["A&P"] = df_finance.apply(
+            lambda x: (x.Advertising + x.Promotion) / x["number of weeks"] * 1000,
+            axis=1,
+        )
+        
+        df_finance["MVC"] = df_finance.apply(
+            lambda x: x["MVC"] / x["number of weeks"] * 1000, axis=1
+        )
+        # Duplicate for n weeks
+        full_idx = pd.date_range(start=date_min, end=date_max, freq="W-Sat")
+        df_test = pd.DataFrame(index=full_idx)
+        df_test["Year"] = df_test.index.year
+        df_test["Month"] = df_test.index.month
+        df_concat = pd.DataFrame()
+        for brand in df_finance.Brand.unique():
+            df_concat = pd.concat(
+                [
+                    df_concat,
+                    pd.merge(
+                        df_finance[df_finance.Brand == brand],
+                        df_test.reset_index(),
+                        on=["Year", "Month"],
+                    ).rename(columns={"index": "Date"}),
+                ]
+            )
+        # Change date type to str
+        df_concat["Date"] = df_concat.Date.dt.strftime("%Y-%m-%d")
+        
+        df_concat = df_concat.groupby(["Brand", "Date"]).agg(
+            {
+                "Advertising" : "sum", 
+                "Promotion" : "sum", 
+                "A&P" : "sum", 
+                "MVC" : "sum",
+            }
+        ).reset_index()
+
+        return df_concat[
+            ["Brand", "Date", "Advertising", "Promotion", "A&P", "MVC"]
+        ]
 
     def fill_Inno_UK(
         self,

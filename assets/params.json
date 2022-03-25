@@ -493,7 +493,7 @@
         "sales_date_format":"%U %Y %w",
         "date_format":"%Y-%m-%d",       
         "header_lines":[7],
-        "sheet_name":["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
+        "sheet_name":["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"],
         "source":"IRI",
         "date_max":"2022-01-01",
         "drop_levels":0,
@@ -514,6 +514,109 @@
        "Finance":{
            "header":[17],
            "country_name":"GERMANY COMMERCIAL"
+        },
+        "brand_positioning_matrix":{
+           "year1" : 2019,
+           "year2" : 2021,
+           "year_min" : 2019
+       },
+       "brand scorecard":{
+           "date_min":"2017-12-31",
+           "awareness":{
+               "ADLER":22.000,
+               "BONBEL":60.000,
+               "BOURSIN":16.000,
+               "BABYBEL":84.000,
+               "LA VACHE QUI RIT":24.000,
+               "KIRI":73.000,
+               "NURISHH":2.000
+           }
+           
+        },
+        "attack_init_state":{
+           "year":2021
+       },
+       "Capacity to Win":{
+           "year_min":2019,
+           "fragmentation n_brands":5,
+           "inno_year_min":2020
+       }
+    },
+    "UK":{
+        "dict_path" :
+        {
+            "PATH_SALES":{"Total Country":"data/UK/Growth Modelling - UK - 2019-2021 - Sell-Out Data (IRI).xlsx"},
+            "PATH_INNO" : {"Total Country":"data/UK/Growth Modelling - UK - 2019-2021 - Sell-Out Data (IRI) - Rate Of Innovation.xlsx"},
+            "PATH_FINANCE" : {"Total Country":"data/UK/Growth Modelling - UK - 2019-2021 - Local Finance Data (SAP - Flux Rio) CONSOLIDATED.xlsx"}
+        },
+        "sales_renaming_columns":[
+            "Date",
+            "Product",
+            "Market",
+            "Category",
+            "Sub Category",
+            "Brand",
+            "Sales in value",
+            "Sales value with promo",
+            "Sales in volume",
+            "Sales volume with promo",
+            "Price with promo",
+            "Price per volume",
+            "Price without promo",
+            "Weighted Distribution",
+            "Distribution"
+       ],
+       "sales_renaming_columns_dict" : {
+            "CATEGORICALS":{
+                "CATEGORY_PPC3  [ CATEGORY_PPC3 ]":"Market", 
+                "SUBCATEGORY_PPC3  [ SUBCATEGORY_PPC3 ]":"Category",
+                "SECTOR_PPC3  [ SECTOR_PPC3 ]":"Sub Category", 
+                "MAJOR BRAND_PPC3  [ MAJOR BRAND_PPC3 ]":"Brand",
+                "Product": "Product",
+                "Time": "Date"
+            },
+            "KPIS":{
+                "Value Sales":"Sales in value", 
+                "Incremental Value" : "Sales value with promo",
+                "Volume Sales": "Sales in volume", 
+                "Incremental Volume" : "Sales volume with promo",
+                "Avg Volume Price": "Price per volume", 
+                "Avg Volume Price Any Trade Promotion" : "Price with promo",
+                "Avg Volume Price No Promotion" : "Price without promo",
+                "Total Points ACV Wtd Distribution":"Distribution",
+                "% Stores Selling" : "Distribution2"
+            }
+        },
+       "bel_brands": [
+           "BOURSIN",
+           "THE LAUGHING COW",
+           "MINI BABYBEL",
+           "PORT SALUT",
+           "NURISHH"
+       ],
+        "sales_date_format":"1 w/e %d %b, %Y",
+        "date_format":"%Y-%m-%d",
+        "header_lines":[7],
+        "sheet_name":["1", "2", "3", "4", "5", "6", "7", "8"],
+        "source":"IRI",
+        "date_max":"2022-01-01",
+        "drop_levels":0,
+        "A&P_codes":["000BQ - BOURSIN", "000LA - THE LAUGHING COW", "000MB - MINI BABYBEL", "000PF - PORT SALUT", "003NH - NURISHH"],
+        "A&P_columns":["YEAR EPM", "MANAGERIAL EPM", "CODE EPM", "R4100 - ADVERTISING", "R4200 - PROMOTION - CONSUMERS", "R1000 - NET SALES", "MVC - Margin on variable costs"],
+        "finance_renaming_columns":["Year", "Country", "Brand", "Advertising", "Promotion", "Sell-in", "MVC"],
+        "dates_finance":{"Min": "2017-12-31", "Max": "2021-12-26"},
+        "Inno":{
+           "header":[7],
+           "date_beg":"2019-01-12",
+           "innovation_duration":104,
+           "brand_column_name" : "Name  [ MAJOR BRAND_CDC1 ]",
+           "date_format":"1 w/e %d %b, %Y",
+           "week_name" : "w/e",
+           "columns_to_remove":["Product", "Name  [ CATEGORY GROUP_CDC1 ]", "Name  [ CATEGORY_CDC1 ]", "Name  [ SUBCATEGORY_CDC1 ]"]
+       },
+       "Finance":{
+           "header":[0],
+           "sheet_names" : ["R4100 - ADVERTISING", "R4200 - PROMOTION - CONSUMERS", "MVC"]
         },
         "brand_positioning_matrix":{
            "year1" : 2019,

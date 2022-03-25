@@ -193,7 +193,17 @@ class Model:
             """
             if "Price per volume" in x.columns:
                 return x[x.Date.dt.year == year]["Price per volume"].agg("mean")
+        
+        def median_price(x):
+            """local function for groupby apply
 
+            :param x:
+            :returns: average of Price per volume for year
+
+            """
+            if "Price per volume" in x.columns:
+                return x[x.Date.dt.year == year]["Price per volume"].agg("median")
+        
         def promo(x):
             """local function for groupby apply
 
@@ -214,13 +224,29 @@ class Model:
             if "Sales in volume" in x.columns:
                 return x[x.Date.dt.year == year]["Sales in volume"].agg("sum")/1000
 
+        def avg_distrib(x):
+            if "Distribution" in x.columns:
+                return x[x.Date.dt.year == year]["Distribution"].agg("mean")
+        
+        def median_distrib(x):
+            if "Distribution" in x.columns:
+                return x[x.Date.dt.year == year]["Distribution"].agg("median")
+        
         df_bel = df_bel.copy()
         df_bel.Date = pd.to_datetime(df_bel.Date)
         df_grp = (
             df_bel.groupby(["Brand", pd.Grouper(key="Date", freq="Y")])
             .apply(
                 lambda r: pd.Series(
-                    {"A&P 2021": ap(r), "Price 2021": price(r), "Promo 2021": promo(r), "Size 2021": size(r)}
+                    {
+                        "A&P 2021": ap(r), 
+                        "Avg Price 2021": price(r), 
+                        "Median Price 2021": median_price(r), 
+                        "Promo 2021": promo(r), 
+                        "Size 2021": size(r), 
+                        "Avg Distribution 2021": avg_distrib(r), 
+                        "Median Distribution 2021": median_distrib(r)
+                    }
                 )
             )
             .reset_index()
@@ -244,15 +270,37 @@ class Model:
 
         df = df.copy()
         df.Date = pd.to_datetime(df.Date)
-        distrib = (
+        # distrib = (
+        #     df[df.Brand.isin(bel_brands)]
+        #     .groupby(["Brand", pd.Grouper(key="Date", freq="Y")])["Distribution"]
+        #     .mean()
+        #     .reset_index()
+        # )
+        # distrib = distrib.loc[distrib[distrib.Date.dt.year == year].index, :]
+        # print(distrib)
+        # distrib = distrib.rename(columns={'Distribution':'Avg Distribution'})
+
+        # new_distrib = (
+        #     df[df.Brand.isin(bel_brands)]
+        #     .groupby(["Brand", pd.Grouper(key="Date", freq="Y")])["Distribution"]
+        #     .median()
+        #     .reset_index()
+        # )
+        # new_distrib = new_distrib.loc[new_distrib[new_distrib.Date.dt.year == year].index, :]
+        # new_distrib = new_distrib.rename(columns={'Distribution':'Median Distribution'})
+
+        new_promo = (
             df[df.Brand.isin(bel_brands)]
-            .groupby(["Brand", pd.Grouper(key="Date", freq="Y")])["Distribution"]
-            .mean()
+            .groupby(["Brand", pd.Grouper(key="Date", freq="Y")])["Sales in volume", "Sales volume with promo"]
+            .sum()
             .reset_index()
         )
-        distrib = distrib.loc[distrib[distrib.Date.dt.year == year].index, :]
+        new_promo = new_promo.loc[new_promo[new_promo.Date.dt.year == year].index, :]
+        new_promo["New Promo"] = new_promo["Sales in volume"] / new_promo["Sales volume with promo"]
 
-        df_attack_init_state = pd.merge(df_temp, distrib, on=["Brand", "Date"])
+        # df_attack_init_state = pd.merge(df_temp, distrib, on=["Brand", "Date"])
+        # df_attack_init_state = pd.merge(df_attack_init_state, new_distrib, on=["Brand", "Date"])
+        df_attack_init_state = pd.merge(df_temp, new_promo, on=["Brand", "Date"])
         df_attack_init_state = df_attack_init_state.drop(columns=["Date"])
         return df_attack_init_state
 

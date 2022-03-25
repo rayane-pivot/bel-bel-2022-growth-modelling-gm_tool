@@ -19,8 +19,8 @@ def main() -> None:
     data_manager.ad_hoc_UK(json_sell_out_params=json_sell_out_params)
     data_manager.fill_df_bel(json_sell_out_params=json_sell_out_params)
 
-    # data_manager.get_df().to_excel(f"view/UK/{country}_df_{date.strftime('%d%m')}.xlsx", index=False)
-    # data_manager.get_df_bel().to_excel(f"view/UK/{country}_df_bel_{date.strftime('%d%m')}.xlsx", index=False)
+    data_manager.get_df().to_excel(f"view/UK/{country}_df_{date.strftime('%d%m')}.xlsx", index=False)
+    data_manager.get_df_bel().to_excel(f"view/UK/{country}_df_bel_{date.strftime('%d%m')}.xlsx", index=False)
 
     model = Model()
 
@@ -41,6 +41,17 @@ def main() -> None:
         data_manager.get_df(), year_min=year_min, year1=year1, year2=year2
     )
     # brand_positioning_matrix.to_excel(f"view/UK/{country}_brand_positioning_matrix_{date.strftime('%d%m')}.xlsx")
+    
+    attack_init_state = model.compute_attack_init_state(
+        df=data_manager.get_df(),
+        df_bel=data_manager.get_df_bel(),
+        json_sell_out_params=json_sell_out_params,
+        country=country,
+        )
+
+    attack_init_state.to_excel(
+        f"view/UK/{country}_attack_init_state_{date.strftime('%d%m')}.xlsx", index=False
+    )
 
 if __name__ == "__main__":
     main()

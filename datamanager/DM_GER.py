@@ -1,6 +1,6 @@
 import datetime as dt
 from itertools import count
-
+import copy
 import pandas as pd
 
 from datamanager.DataManager import DataManager
@@ -53,7 +53,7 @@ class DM_GER(DataManager):
         
         self._df = df
 
-    def fill_df_bel(self, json_sell_out_params):
+    def fill_df_bel(self, json_sell_out_params_in):
         """Build df_bel
 
         :param json_sell_out_params: json params dict
@@ -62,15 +62,24 @@ class DM_GER(DataManager):
         """
         assert not self._df.empty, "df is empty, call ad_hoc_GER() or load() first"
 
-        sales_date_format=json_sell_out_params.get(self._country).get("sales_date_format")
-        date_format = json_sell_out_params.get(self._country).get("date_format")
+        sales_date_format=json_sell_out_params_in.get(self._country).get("sales_date_format")
+        date_format = json_sell_out_params_in.get(self._country).get("date_format")
 
         for channel, df in self.get_df_channels().items():
-            json_sell_out_params = json_sell_out_params.copy()
+            json_sell_out_params = copy.deepcopy(json_sell_out_params_in)
             df = df.copy()
             df.Date = pd.to_datetime(df.Date)
             df.Date = df.Date.dt.strftime(date_format)
             bel_brands = json_sell_out_params.get(self._country).get("bel_brands")
+            
+            df_bel_brands = df[df.Brand.isin(bel_brands)]
+            idx = df_bel_brands.groupby(["Date", "Brand"])['Sales in volume'].transform(max) == df_bel_brands["Sales in volume"]
+            df_bel_brands = df_bel_brands.loc[idx, ["Date", "Brand", "Distribution"]]
+            
+            #ad_hoc_TLC
+            bel_brands.remove("LA VACHE QUI RIT")
+            
+            
             df_bel = (
                 df[df.Brand.isin(bel_brands)]
                 .groupby(["Date", "Brand"], as_index=False)[
@@ -79,8 +88,6 @@ class DM_GER(DataManager):
                         "Sales in volume",
                         "Sales in value",
                         "Sales volume with promo",
-                        "Weighted Distribution",
-                        "Distribution",
                     ]
                 ]
                 .agg(
@@ -89,11 +96,33 @@ class DM_GER(DataManager):
                         "Sales in volume": "sum",
                         "Sales in value": "sum",
                         "Sales volume with promo":"sum",
-                        "Weighted Distribution": "mean",
-                        "Distribution": "mean",
                     }
                 )
             )
+            ad_hoc_TLC = ["LA VACHE QUI RIT"]
+            df_bel_TLC = (
+                df[df.Brand.isin(ad_hoc_TLC)][df.Category != "SNACK"]
+                .groupby(["Date", "Brand"], as_index=False)[
+                    [
+                        "Price per volume",
+                        "Sales in volume",
+                        "Sales in value",
+                        "Sales volume with promo",
+                    ]
+                ]
+                .agg(
+                    {
+                        "Price per volume": "mean",
+                        "Sales in volume": "sum",
+                        "Sales in value": "sum",
+                        "Sales volume with promo":"sum",
+                    }
+                )
+            )
+            df_bel = pd.concat([df_bel, df_bel_TLC])
+            
+            
+            df_bel = pd.merge(df_bel, df_bel_brands, on=["Date", "Brand"], how="left")
 
             df_bel["Promo Cost"] = df_bel["Sales volume with promo"] / df_bel["Sales in volume"]
 
