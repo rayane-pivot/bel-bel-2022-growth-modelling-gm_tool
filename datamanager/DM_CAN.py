@@ -24,7 +24,6 @@ class DM_CAN(DataManager):
             "FB CHEESE TYP",
         ] = "PLANT BASED"
         date_cols = [col for col in df.columns if json_sell_out_params.get(self._country).get("sales_col_week_name") in col]
-        print(df.loc[df[df["FB BRAND"]=="MINI BABYBEL"][df["Feature"]=="WSP_Sheet1 - Vol(Kgs)"].index, date_cols].sum().sum())
         feature_cols = json_sell_out_params.get(self._country).get("sales_col_names")
         df_concat = pd.DataFrame()
         k=0

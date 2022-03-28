@@ -7,6 +7,8 @@
              "PATH_PROMO_COST" : {"Total Country":"data/Growth Modelling - USA - 2019-2021 - Promo Cost (Xtel).xlsx"},
              "PATH_HH_INDEX" : {"Total Country":"data/Growth Modelling - USA - Consumer Panel -US HH penetration GM.xlsx"}
              },
+        "sales_date_format":"%b %Y",
+        "date_format" : "%y-%m",
          "sales_renaming_columns":[
              "Date",
              "Product",
@@ -127,6 +129,7 @@
             "APERICUBE",
             "BOURSIN",
             "BABYBEL",
+            "MINI BABYBEL",
             "LA VACHE QUI RIT",
             "KIRI",
             "PORT SALUT",
@@ -166,6 +169,7 @@
                 "APERICUBE":85,
                 "BOURSIN":88,
                 "BABYBEL":90,
+                "MINI BABYBEL":90,
                 "LA VACHE QUI RIT":91,
                 "KIRI":89,
                 "PORT SALUT":69,
@@ -309,9 +313,9 @@
     "KSA":{
         "_comment":{},
         "dict_path" : {
-            "PATH_SALES": {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Sell-Out Data (Nielsen) Modern & Traditional Trade.xlsx"},
-            "PATH_INNO" : {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Sell-Out Data (IRI) Rate Of Innovation.xlsx"},
-            "PATH_FINANCE" : {"Total Country":"data/KSA/"},
+            "PATH_SALES": {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Sell-Out Data (Nielsen) All (1703).xlsx"},
+            "PATH_INNO" : {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Sell-Out Data (IRI) Rate Of Innovation_CONSOLIDATED.xlsx"},
+            "PATH_FINANCE" : {"Total Country":"data/KSA/Growth Modelling - KSA - 2019-2021 - Local Finance Data (SAP - Flux Rio) - Consolidated.xlsx"},
             "PATH_PROMO_COST" : {"Total Country":"data/KSA/"},
             "PATH_HH_INDEX" : {"Total Country":""}
             },
@@ -334,12 +338,15 @@
             "Trad Distribution"
         ],
         "sales_cat_cols":[
-            "BRAND",	
-            "CHEESE TYPE",
-            "CHEESE SEGMENT",	
-            "CHEESE SUB SEGMENT",
-            "CHEESE FLAVOUR",
-            "PROMO/NON PROMO",
+            "MARKET", 
+            "CHEESE TYPE", 
+            "CHEESE SUBCATEGORY", 
+            "CHEESE SEGMENT", 
+            "CHEESE SUB SEGMENT", 
+            "BRAND", 
+            "CHEESE FLAVOUR", 
+            "ITEM", 
+            "PROMO/NO PROMO",
             "Channel",
             "Feature"
         ],
@@ -347,19 +354,37 @@
         "date_format":"%Y-%m",
         "header_lines":[4],
         "sheet_name":[
-            "Trad.Trade - Val$",
-            "Trad.Trade - Vol Kgs ",
-            "Trad.Trade - Price Vol",
-            "Trad.Trade - TDP",
-            "Mod.Trade - Val$",
-            "Mod.Trade - Vol Kgs ",
-            "Mod.Trade - Price Vol",
-            "Mod.Trade - TDP"
+            "Val$",
+            "Vol Kgs",
+            "Price Vol",
+            "TDP"
         ],
+        "sales_renaming_columns_dict" : {
+            "CATEGORICALS":{
+                "MARKET":"Channel", 
+                "CHEESE TYPE":"Natural-Processed",
+                "CHEESE SUBCATEGORY":"Hard-Spreadable", 
+                "CHEESE SEGMENT":"Category",
+                "CHEESE SUB SEGMENT":"Sub Category", 
+                "BRAND":"Brand",
+                "CHEESE FLAVOUR": "Flavour",
+                "ITEM": "Product",
+                "PROMO/NO PROMO": "Promo",
+                "Channel" : "Total Country",
+                "Feature": "Feature",
+                "Date": "Date"
+            },
+            "KPIS":{
+                "Val$":"Sales in value", 
+                "Vol Kgs":"Sales in volume", 
+                "Price Vol":"Price per volume", 
+                "TDP":"Distribution"
+            }
+        },
         "drop_levels":0,
         "sales_col_names":["Unnamed: 0", "FB CHEESE TYP", "FB CHEESE SEGMNT", "FB BRAND", "Channel"],
         "source":"Nielsen",
-        "bel_brands":["LAVACHEQUIRIT", "KIRI", "JIBNET ABOU AL WALAD"],
+        "bel_brands":["LA VACHE QUI RIT", "KIRI", "JIBNET ABOU AL WALAD"],
         "dates":{
             "2018": {"Min": "2018-01-01", "Max": "2019-01-01"},
             "2019": {"Min": "2019-01-01", "Max": "2020-01-01"}, 
@@ -379,22 +404,19 @@
         "Finance":{
            "header":[0],
            "finance_codes_to_brands" : {
-               "000BQ":"BOURSIN", 
-               "000LA":"LA VACHE QUI RIT", 
-               "004LA":"LA VACHE QUI RIT", 
-               "000MB":"MINI BABYBEL", 
-               "003NHDP":"NURISHH", 
-               "000KEPC":"KIRI"
+            "000KE" : "KIRI",
+            "000LA" : "LA VACHE QUI RIT",
+            "000RB" : "JIBNET ABOU AL WALAD"
             }
         },
         "Inno":{
             "header":[4],
             "date_beg":"2019-01",
-            "innovation_duration":104,
+            "innovation_duration":24,
             "brand_column_name" : "Brand",
-            "week_name" : "",
+            "week_name" : "20",
             "date_format":"%b %Y",
-            "columns_to_remove":["Item", "SubCategory", "Segment", "SubSegment"]
+            "columns_to_remove":["Item", "SubCategory", "Segment", "SubSegment", "Time", "Category"]
         },
         "Promo Cost":{
             "renaming_brands" : {
@@ -428,5 +450,96 @@
             "fragmentation n_brands":5,
             "inno_year_min":2020
         }
+    },
+    "GER":{
+        "_comment":{
+           "Total Country":"data/GER/Growth Modelling - GER - 2019-2021 - Sell-Out Data (IRI) without Hard Discount.xlsx"
+       },
+        "dict_path" :
+        {
+            "PATH_SALES":{
+                "Total Country":"data/GER/Growth Modelling - GER - 2019-2021 - Sell-Out Data (IRI) without Hard Discount.xlsx",
+                "Hard Discount":"data/GER/Growth Modelling - GER - 2019-2021 - Sell-Out Data (IRI) only Hard Discount.xlsx"
+                },
+           "PATH_INNO" : {"Total Country":"data/GER/Growth Modelling - GER - 2019-2021 - Sell-Out Data (IRI) Rate Of Innovation-FRSIEL12200.xlsx"},
+           "PATH_FINANCE" : {"Total Country":"data/GER/Growth Modelling - GER - 2018-2021 - Global Finance Data (SAP - Flux Rio).xlsx"}
+        },
+        "sales_renaming_columns":[
+            "Date",
+            "Product",
+            "Attribute",
+            "Category",
+            "Sub Category",
+            "Brand",
+            "Sales in value",
+            "Sales value with promo",
+            "Sales in volume",
+            "Sales volume with promo",
+            "Price per volume",
+            "Price with promo",
+            "Price without promo",
+            "Weighted Distribution",
+            "Distribution"
+       ],
+       "bel_brands": [
+           "ADLER",
+           "BONBEL",
+           "BOURSIN",
+           "BABYBEL",
+           "LA VACHE QUI RIT",
+           "KIRI",
+           "NURISHH"
+       ],
+        "sales_date_format":"%U %Y %w",
+        "date_format":"%Y-%m-%d",       
+        "header_lines":[7],
+        "sheet_name":["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
+        "source":"IRI",
+        "date_max":"2022-01-01",
+        "drop_levels":0,
+        "A&P_codes":["000AA - ADLER", "000BK - BONBEL", "000BQ - BOURSIN", "000BA - BABYBEL", "000MB - MINI BABYBEL", "000LA - THE LAUGHING COW", "000KE - KIRI", "003NH - NURISHH"],
+        "A&P_columns":["YEAR EPM", "MANAGERIAL EPM", "CODE EPM", "R4100 - ADVERTISING", "R4200 - PROMOTION - CONSUMERS", "R1000 - NET SALES", "MVC - Margin on variable costs"],
+        "finance_renaming_columns":["Year", "Country", "Brand", "Advertising", "Promotion", "Sell-in", "MVC"],
+        "dates_finance":{"Min": "2017-12-31", "Max": "2021-12-26"},
+        "Inno":{
+           "header":[7],
+           "date_beg":"2019-01-06",
+           "innovation_duration":104,
+           "brand_column_name" : "MARKE  [ MARKE ]",
+           "week_name":"W ",
+           "date_format_re":"%W %Y",
+           "date_format":"%U %Y %w",
+           "columns_to_remove":["Product", "WARENGRUPPE  [ WARENGRUPPE ]", "TEILMARKT  [ TEILMARKT ]"]
+       },
+       "Finance":{
+           "header":[17],
+           "country_name":"GERMANY COMMERCIAL"
+        },
+        "brand_positioning_matrix":{
+           "year1" : 2019,
+           "year2" : 2021,
+           "year_min" : 2019
+       },
+       "brand scorecard":{
+           "date_min":"2017-12-31",
+           "awareness":{
+               "ADLER":22.000,
+               "BONBEL":60.000,
+               "BOURSIN":16.000,
+               "BABYBEL":84.000,
+               "LA VACHE QUI RIT":24.000,
+               "KIRI":73.000,
+               "NURISHH":2.000
+           }
+           
+        },
+        "attack_init_state":{
+           "year":2021
+       },
+       "Capacity to Win":{
+           "year_min":2019,
+           "fragmentation n_brands":5,
+           "inno_year_min":2020
+       }
     }
  }
