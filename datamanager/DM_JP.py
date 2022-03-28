@@ -11,15 +11,41 @@ class DM_JP(DataManager):
     _country = "JP"
 
     def ad_hoc_JP(self, json_sell_out_params):
-        def date_to_datetime(df):
+        def date_to_format(df):
             df.Date = pd.to_datetime(df.Date+' 0', format="%Y W%U %w")
             return df
+        
+        def sub_cat_to_cat(df):
+            df["Category"] = df["Sub Category"]
             
+            df = df.replace({
+                "Category": {
+                    "COOKING OTHERS" : "COOKING OTHERS",
+                    "COOKING_CREAM" : "COOKING CREAM",
+                    "MOZZARELLA" : "COOKING MOZZARELLA",
+                    "POWDER" : "COOKING POWDER",
+                    "SHREDDED" : "COOKING SHREDDED",
+                    "SLICE" : "COOKING SLICE",
+                    "BABY" : "SNK BABY",
+                    "CAMEMBERT" : "SNK CAMEMBERT",
+                    "CARTON" : "SNK CARTON",
+                    "CREAM PORTION" : "SNK CREAM PORTION",
+                    "PORTION" : "SNK PORTION",
+                    "ROUND" : "SNK ROUND",
+                    "SNACKING_NATURAL" : "SNK NATURAL",
+                    "SNACKING_PROCESS" : "SNK PROCESS",
+                    "STRING" : "SNK STRING",
+                    "SWEET" : "SNK SWEET"
+                    }
+                })
+            return df
+
         df = super().fill_df(json_sell_out_params, self._country)
         df = (
             df
             .set_index(["CATEGORY", "SUB CATEGORY", "BRAND", "Feature", "Channel"])
-            .stack(dropna=False).reset_index()
+            .stack(dropna=False)
+            .reset_index()
             .rename(columns={
                 "CATEGORY":"Category",
                 "SUB CATEGORY":"Sub Category",
@@ -38,7 +64,8 @@ class DM_JP(DataManager):
                 "TDP SKU Gross Weighted Distrib": "Distribution",
             })
             .rename_axis(None, axis=1)
-            .pipe(date_to_datetime)
+            .pipe(date_to_format)
+            .pipe(sub_cat_to_cat)
             )
         self._df = df
 

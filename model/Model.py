@@ -297,7 +297,7 @@ class Model:
             .reset_index()
         )
         new_promo = new_promo.loc[new_promo[new_promo.Date.dt.year == year].index, :]
-        new_promo["New Promo"] = new_promo["Sales in volume"] / new_promo["Sales volume with promo"]
+        new_promo["New Promo"] = new_promo["Sales volume with promo"] / new_promo["Sales in volume"]
 
         # df_attack_init_state = pd.merge(df_temp, distrib, on=["Brand", "Date"])
         # df_attack_init_state = pd.merge(df_attack_init_state, new_distrib, on=["Brand", "Date"])

@@ -130,7 +130,14 @@ def forecast_profile(profile, target, periods=157, freq='W', plot=False):
 
     return fcst, mape
 
-def attack_new_markets(data_manager:DataManager, targets:dict, json_sell_out_params:dict, country:str, channel:str=None) -> dict:
+def attack_new_markets(
+    data_manager:DataManager, 
+    targets:dict, 
+    json_sell_out_params:dict, 
+    country:str, 
+    channel:str=None, 
+    periods:int=157) -> dict:
+
     from sklearn.neighbors import NearestNeighbors
     from sklearn.preprocessing import LabelEncoder
     
@@ -182,7 +189,7 @@ def attack_new_markets(data_manager:DataManager, targets:dict, json_sell_out_par
         # Transform series to dataframe
         profile = profile.to_frame().reset_index().rename(columns={'Date': 'ds', 'Sales in volume': 'y'})
         # Forecast with profile
-        forecasts, mape = forecast_profile(profile, target, periods=157, freq='W', plot=True)
+        forecasts, mape = forecast_profile(profile, target, periods=periods, freq='W', plot=True)
         
         targets[key]['3Y'] = forecasts[forecasts.ds > profile.ds.iloc[-1]].y.sum()
         targets[key]['mape'] = mape
@@ -217,6 +224,7 @@ def main(args) -> None:
     date = dt.datetime.now()
     country = args.country
     channel = args.channel
+    periods = args.periods
     
     with open("assets/params.json", "r") as f:
         json_sell_out_params = json.load(f)
@@ -242,17 +250,19 @@ def main(args) -> None:
         targets=targets,
         json_sell_out_params=json_sell_out_params,
         country=country,
-        channel=channel
+        channel=channel,
+        periods=periods
     )
 
     ### SAVE predictions
-    sales_pred.to_excel(f"view/{country}/{country}_pred_sales_{date.strftime('%d%m')}.xlsx")
-    mape_pred.to_excel(f"view/{country}/{country}_pred_mape_{date.strftime('%d%m')}.xlsx")
+    sales_pred.to_excel(f"view/{country}/{country}_pred_sales_{str(periods)}_weeks_{date.strftime('%d%m')}.xlsx")
+    mape_pred.to_excel(f"view/{country}/{country}_pred_mape_{str(periods)}_weeks_{date.strftime('%d%m')}.xlsx")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", type=str, help="Country")
     parser.add_argument("--channel", type=str, help="Channel")
+    parser.add_argument("--periods", type=int, help="Num of Periods")
     args = parser.parse_args()
     main(args)

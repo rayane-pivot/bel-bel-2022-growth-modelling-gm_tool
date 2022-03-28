@@ -24,8 +24,8 @@ def main():
     # for channel, df in data_manager.get_df_channels().items():
     #     df.to_excel(f"view/GER/{country}_{channel}_df_{date.strftime('%d%m')}.xlsx", index=False)
     
-    for channel, df_bel in data_manager.get_df_bel_channels().items():
-        df_bel.to_excel(f"view/GER/{country}_{channel}_df_bel_{date.strftime('%d%m')}.xlsx", index=False)
+    # for channel, df_bel in data_manager.get_df_bel_channels().items():
+    #     df_bel.to_excel(f"view/GER/{country}_{channel}_df_bel_{date.strftime('%d%m')}.xlsx", index=False)
     
     
     model = Model()
