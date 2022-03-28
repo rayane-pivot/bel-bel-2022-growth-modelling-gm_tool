@@ -611,39 +611,14 @@ class Forecast:
                 for k, v in zip(features, scenario):
                     df_scenario["% " + k] = v
 
-                print("\n DataFrame Scenario\n=====================")
-                print_df_overview(df_scenario)
+                # print("\n DataFrame Scenario\n=====================")
+                # print_df_overview(df_scenario)
+                # print_df_overview(df_scenario[results_columns_name])
 
                 gen_resumed_results = lambda df, feature, years: [
                     df[df.ds.dt.year == int(y)][feature].sum() for y in years
                 ]
 
-                print_df_overview(df_scenario[results_columns_name])
-                print(
-                    pd.DataFrame(
-                        [
-                            list(scenario)
-                            + gen_resumed_results(df_prophet, "A&P", [last_year])
-                            + gen_resumed_results(df_scenario, "A&P", years)
-                            + gen_resumed_results(
-                                df_prophet, "Price per volume", [last_year]
-                            )
-                            + gen_resumed_results(
-                                df_scenario, "Price per volume", years
-                            )
-                            + gen_resumed_results(df_prophet, "Promo Cost", [last_year])
-                            + gen_resumed_results(df_scenario, "Promo Cost", years)
-                            + gen_resumed_results(
-                                df_prophet, "Distribution", [last_year]
-                            )
-                            + gen_resumed_results(df_scenario, "Distribution", years)
-                            + [last_year_sales]
-                            + gen_resumed_results(fcst, "yhat", years)
-                            + [df_scenario["Sales in volume"].sum()]
-                        ],
-                        columns=resumed_results_columns_name,
-                    )
-                )
                 list_results.append(df_scenario[results_columns_name])
                 list_resumed_results.append(
                     pd.DataFrame(

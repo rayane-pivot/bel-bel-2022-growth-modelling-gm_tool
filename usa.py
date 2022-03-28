@@ -1,5 +1,4 @@
 import json
-from itertools import count
 
 import pandas as pd
 
@@ -7,7 +6,7 @@ from datamanager.DM_USA import DM_USA
 from model.M_USA import M_USA
 
 PATH_TO_PARAMS = "assets/params.json"
-PATH_TO_OUTPUTS = "view/"
+PATH_TO_OUTPUTS = "view/USA/"
 
 
 def main():
@@ -43,7 +42,7 @@ def main():
     brand_positioning_matrix = model.compute_brand_positioning_matrix(
         data_manager.get_df(), year_min=year_min, year1=year1, year2=year2
     )
-    # brand_positioning_matrix.to_excel(PATH_TO_OUTPUTS + 'USA_brand_positioning_matrix_0303.xlsx')
+    #brand_positioning_matrix.to_excel(PATH_TO_OUTPUTS + 'USA_brand_positioning_matrix_0903.xlsx')
 
     brand_scorecard = model.compute_brand_scorecard(
         data_manager.get_df(),
