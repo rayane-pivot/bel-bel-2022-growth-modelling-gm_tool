@@ -5,7 +5,7 @@ geo="FR"
 
 python main.py \
        --country $country \
-       --path "/Users/ahmed/Projects/gm_tool/data/${country}/${1}/" \
+       --path "/Users/augustecousin/Documents/bel_gm_tool/gm_tool/view/data/${country}/${1}/" \
        --weeks \
        --periods 157 \
        --geo $geo \

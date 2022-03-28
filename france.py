@@ -2,6 +2,7 @@ import argparse
 import datetime as dt
 import json
 import pandas as pd
+import datetime as dt
 
 import numpy as np
 import pandas as pd
@@ -13,88 +14,21 @@ from model.Capacity_To_win import Capacity_To_Win
 PATH_TO_PARAMS = "assets/params.json"
 PATH_TO_OUTPUTS = "view/"
 
-pd.set_option("display.width", 1000)
-pd.set_option("max.columns", 1000)
-
-
-def print_df_bel(df):
-    print("DataFrame \n==========")
-    print(pd.concat([df.head(5), df.sample(5), df.tail(5)]))
-
-    brands = df.Brand.unique()
-    print("\nBrands\n======")
-    print(brands)
-
-    return brands
-
-
-def print_df(df):
-    print("DataFrame \n==========")
-    print(pd.concat([df.head(5), df.sample(5), df.tail(5)]))
-
-    print("\nBrands\n======")
-    print(df.Brand.unique())
-
-    print("\nDistinct categories\n===================")
-    print(df.Category.unique())
-
-    print("\nBrands => Categories \n=======================")
-    df_brands_cat = {
-        brand: df[df.Brand == brand].Category.unique().tolist()
-        for brand in df.Brand.unique()
-    }
-    print(df_brands_cat)
-
-    print("\nDistinct Sub Categories\n=======================")
-    print(df["Sub Category"].unique())
-
-    print("\nSub Categories of each category\n=============================")
-    print(
-        {
-            cat: df[df.Category == cat]["Sub Category"].unique().tolist()
-            for cat in df.Category.unique()
-        }
-    )
-
-
-def main(args):
-
-    print(f"Country : {args.geo} \n=======")
-
-    # Load data
-    if args.path:
-        df = pd.read_excel(args.path + "df.xlsx")
-        df_bel = pd.read_excel(args.path + "df_bel.xlsx")
-
-        if args.verbose:
-            print("\nBel \n====")
-            print_dataframe(df_bel)
-
-            print("\nGeneral\n========")
-            print_dataframe(df)
-
-    return
-    # Compute trends
-    geo = "FR"
-    tdelta = dt.timedelta(weeks=1)
-    timeframes = list(df_bel.Date.unique())
-    timeframes.insert(
-        0,
-        (dt.datetime.strptime(timeframes[0], "%Y-%m-%d") - tdelta).strftime("%Y-%m-%d"),
-    )
-
+def main() -> None:
     with open(PATH_TO_PARAMS, "r") as f:
         json_sell_out_params = json.load(f)
+
+    date = dt.datetime.now()
 
     data_manager = DM_FR()
     data_manager.ad_hoc_FR(json_sell_out_params)
     data_manager.fill_df_bel(json_sell_out_params)
 
-    # for channel, df in data_manager.get_df_channels().items():
-    #     df.to_excel(f"view/France/FR_{channel}_df_1803.xlsx", index=False)
+    for channel, df in data_manager.get_df_channels().items():
+        df.to_excel(f"view/France/FR_{channel}_df_{date.strftime('%d%m')}.xlsx", index=False)
     
-    # for channel, df_bel in data_manager.get_df_bel_channels().items():
-    #     df_bel.to_excel(f"view/France/FR_{channel}_df_bel_1803.xlsx", index=False)
+    for channel, df_bel in data_manager.get_df_bel_channels().items():
+        df_bel.to_excel(f"view/France/FR_{channel}_df_bel_{date.strftime('%d%m')}.xlsx", index=False)
     
     model = M_FR()
 
@@ -147,52 +81,13 @@ def main(args):
         country="FR",
     )
 
-    with pd.ExcelWriter("view/France/capacity_to_win_1803.xlsx") as writer:
-        df_brand_scaled.to_excel(writer, sheet_name='Brand_Score')
-        df_category_scaled.to_excel(writer, sheet_name='Market_Score')
-        df_market_brand_scaled.to_excel(writer, sheet_name='Market_Brand_Score')
-        capacity_to_win.to_excel(writer, sheet_name='CTW')
+    # with pd.ExcelWriter(f"view/France/capacity_to_win_{date.strftime('%d%m')}_expertise.xlsx") as writer:
+    #     df_brand_scaled.to_excel(writer, sheet_name='Brand_Score')
+    #     df_category_scaled.to_excel(writer, sheet_name='Market_Score')
+    #     df_market_brand_scaled.to_excel(writer, sheet_name='Market_Brand_Score')
+    #     capacity_to_win.to_excel(writer, sheet_name='CTW')
 
 
 
 if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--path", type=str, help="Path to df_bel.xlxs, and df.xlxs")
-    parser.add_argument(
-        "--country", type=str, help="Country code for which we are computing insights"
-    )
-    parser.add_argument(
-        "-fm", "--forecast-markets", help="Forecast markets", action="store_true"
-    )
-    parser.add_argument(
-        "-fbnr",
-        "--forecast-brands-no-regressors",
-        help="Forecast brands without using regressors",
-        action="store_true",
-    )
-    parser.add_argument(
-        "-fbwr",
-        "--forecast-brands-with-regressors",
-        help="Forecast brands using regressors",
-        action="store_true",
-    )
-    parser.add_argument(
-        "-gdp", "--growth-drivers-past", help="Growth drivers past", action="store_true"
-    )
-    parser.add_argument("--scenarios", type=list, help="Compute giving scenarios")
-    parser.add_argument("--geo", type=str, help="Geo for computing trends")
-    parser.add_argument(
-        "--compute-trends", help="Computing trends giving the geo", action="store_true"
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        help="Print samples of dataframes and results",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--compute-auguste", help="Compute Auguste parts", action="store_true"
-    )
-    args = parser.parse_args()
-    main(args)
+    main()
