@@ -11,6 +11,7 @@ import utils
 from datamanager.DataManager import DataManager
 from model.Forecast import Forecast
 from model.GrowthDrivers import GrowthDrivers
+from utils.tools import cagr, print_df_overview
 from utils.trends import compute_trends
 
 PATH_TO_PARAMS = "assets/params.json"
@@ -18,10 +19,6 @@ PATH_TO_OUTPUTS = "view/"
 
 # pd.set_option("display.width", 1000)
 # pd.set_option("max.columns", 1000)
-
-
-def print_df_overview(df):
-    print(pd.concat([df.head(5), df.sample(5), df.tail(5)]))
 
 
 def print_df_bel(df):
@@ -88,6 +85,80 @@ def save_results_and_errors(df, df_error, spath):
         df_error.round(1).to_excel(writer, header=False, startrow=len(df) + 2)
 
 
+def print_growth_drivers_past(args, dict_df_gd, dict_df_gd_scaled, folder):
+    """TODO describe function
+
+    :param args:
+    :param dict_df_gd:
+    :param dict_df_gd_scaled:
+    :returns:
+
+    """
+
+    print("Markets: {} | Competition: {}".format(args.markets, args.competition))
+    print("===================================")
+    if args.verbose:
+        print(
+            "\nPermutation Importance | Growth Drivers Past All years\n"
+            "====================================================="
+        )
+        print(dict_df_gd["all"]["xgb_feature_importance"])
+
+        print(
+            "\nPermutation Importance | Growth Drivers Past All years rescaled \n"
+            "================================================================"
+        )
+        print(dict_df_gd_scaled["all"]["permutation_importance"])
+
+        print(
+            "\nXGB Feature Importance | Growth Drivers Past All years\n"
+            "====================================================="
+        )
+        print(dict_df_gd["all"]["permutation_importance"])
+
+        print(
+            "\nXGB Feature Importance | Growth Drivers Past All years rescaled \n"
+            "================================================================"
+        )
+        print(dict_df_gd_scaled["all"]["xgb_feature_importance"])
+
+    if args.save_growth_drivers_past:
+        fgd_path_to_create = os.path.join(
+            args.path, "GrowthDrivers", folder, "AllDrivers"
+        )
+        if not os.path.exists(fgd_path_to_create):
+            os.makedirs(fgd_path_to_create)
+
+        fgd_path_to_create_cd = fgd_path_to_create.replace(
+            "AllDrivers", "ControllableDrivers"
+        )
+
+        if not os.path.exists(fgd_path_to_create_cd):
+            os.makedirs(fgd_path_to_create_cd)
+
+        fgd_path = os.path.join(
+            fgd_path_to_create, f"{args.country.lower()}_growth_drivers_past"
+        )
+        fgd_path_cd = os.path.join(
+            fgd_path_to_create_cd, f"{args.country.lower()}_growth_drivers_past"
+        )
+
+        for imp in ["permutation_importance", "xgb_feature_importance"]:
+            for year in dict_df_gd:
+                print(f"\n    Saving growth drivers past {imp}...")
+                dict_df_gd[year][imp].round(1).to_excel(
+                    fgd_path + "_{}_{}.xlsx".format(imp, year)
+                )
+
+                print(
+                    f"\n    Saving growth drivers past rescaled controllable features {imp} ..."
+                )
+
+                dict_df_gd_scaled[year][imp].round(1).to_excel(
+                    fgd_path_cd + "_{}_{}_controllable_features.xlsx".format(imp, year)
+                )
+
+
 def main(args):
     if args.weeks:
         tdelta = dt.timedelta(weeks=1)
@@ -96,19 +167,11 @@ def main(args):
         tdelta = dt.timedelta(weeks=5)
         freq = "M"
 
-    # Data Manager
-    dm = DataManager()
-
-    # Forecast
-    forecast = Forecast(
-        args.country, dm, periods=args.periods, freq=freq, spath=args.path
-    )
-
     print(f"Country : {args.geo} \n=======")
 
     # Load data
     if args.path:
-        df = pd.read_excel(args.path + "df.xlsx")
+        df = pd.read_excel(os.path.join(args.path, "df.xlsx"))
         df["Date"] = pd.to_datetime(df.Date, format="%Y-%m-%d")
         df["Date"] = df.Date.apply(lambda x: x.strftime("%Y-%m-%d"))
 
@@ -121,6 +184,16 @@ def main(args):
         df_bel = pd.read_excel(args.path + "df_bel.xlsx")
         df_bel["Date"] = pd.to_datetime(df_bel.Date, format="%Y-%m-%d")
         df_bel["Date"] = df_bel.Date.apply(lambda x: x.strftime("%Y-%m-%d"))
+
+        if args.country == "GER":
+            df_brands_sales = pd.read_excel(
+                os.path.join(args.path, "brands_sales.xlsx")
+            )
+            df_brands_sales = pd.merge(df_brands_sales, df_bel[["Date"]], on="Date")
+
+            for brand in df_bel.Brand.unique():
+                index = df_bel[df_bel.Brand == brand].index
+                df_bel.loc[index, "Sales in volume"] = df_brands_sales[brand]
 
         if args.verbose:
             print("\nGeneral\n========")
@@ -136,6 +209,24 @@ def main(args):
             print("\nSub Categories of each category\n=============================")
             bel_markets = list(set(list(itertools.chain(*bel_brands_cat.values()))))
             pprint.pprint({cat: cat_subcats[cat] for cat in bel_markets})
+
+    # Save in logistic folder if logistic, otherwise in a folder named linear
+    args.path = args.path.replace("data", "results")
+    args.path = (
+        os.path.join(args.path, "logistic")
+        if args.logistic
+        else os.path.join(args.path, "linear")
+    )
+    if not os.path.exists(args.path):
+        os.makedirs(args.path)
+
+    # Data Manager
+    dm = DataManager()
+
+    # Forecast
+    forecast = Forecast(
+        args.country, dm, df, df_bel, periods=args.periods, freq=freq, spath=args.path
+    )
 
     if args.compute_trends:
         # Compute trends
@@ -173,7 +264,7 @@ def main(args):
             )
 
         # Adhoc for CA cause trends dates and df dates do not correspond
-        if args.geo == "CA":
+        if args.geo in ["CA", "GB"]:
             tdelta_day = dt.timedelta(days=1)
             df_trends["Date"] = df_trends.Date.apply(lambda x: x - tdelta_day)
 
@@ -212,7 +303,7 @@ def main(args):
         if args.save_forecast_categories:
             print("\n    Saving categories forecasts ....")
             fc_path = os.path.join(
-                args.path.replace("data", "results"),
+                args.path,
                 f"{args.country.lower()}_categories_forecasts.xlsx",
             )
 
@@ -221,36 +312,88 @@ def main(args):
             )
 
     if args.forecast_brands_with_regressors:
-        (
-            df_brands_fcst_res,
-            feats_futures,
-            df_brands_mape_errors,
-        ) = forecast.forecasting_brands_with_regressors(
-            df_bel,
-            bel_brands,
-            args.forecast_brands_with_regressors,
-            logistic=args.logistic,
-            plot=args.plot_forecast_brands,
-            splot_suffix=args.save_plot_forecast_brands_with_regressors,
-        )
+        # For No Market and No competition, just set both to False
+        if args.markets:
+            (
+                df_brands_wm_fcst_res,
+                feats_wm_futures,
+                df_brands_wm_mape_errors,
+            ) = forecast.forecasting_brands_with_regressors(
+                df_bel,
+                bel_brands,
+                args.forecast_brands_with_regressors,
+                logistic=args.logistic,
+                plot=args.plot_forecast_brands,
+                splot_suffix=args.save_plot_forecast_brands_with_regressors
+                + "MarketsIncluded",
+                add_market=True,
+                add_competition=False,
+            )
+
+        if args.competition:
+            (
+                df_brands_wc_fcst_res,
+                feats_wc_futures,
+                df_brands_wc_mape_errors,
+            ) = forecast.forecasting_brands_with_regressors(
+                df_bel,
+                bel_brands,
+                args.forecast_brands_with_regressors,
+                logistic=args.logistic,
+                plot=args.plot_forecast_brands,
+                splot_suffix=args.save_plot_forecast_brands_with_regressors
+                + "CompetitionIncluded",
+                add_market=False,
+                add_competition=True,
+            )
 
         if args.verbose:
-            print("\nForecast Brands with regressors\n==============================")
-            print_df_overview(df_brands_fcst_res)
+            if args.markets:
+                print(
+                    "\nForecast Brands with regressors, markets included \n"
+                    "================================================="
+                )
+                print_df_overview(df_brands_wm_fcst_res)
 
-            print("\nMAPE\n=====")
-            print(df_brands_mape_errors)
+                print("\nMAPE\n=====")
+                print(df_brands_wm_mape_errors)
+
+            if args.competition:
+                print(
+                    "\nForecast Brands with regressors, competition included \n"
+                    "====================================================="
+                )
+                print_df_overview(df_brands_wc_fcst_res)
+
+                print("\nMAPE\n=====")
+                print(df_brands_wc_mape_errors)
 
         if args.save_forecast_brands_with_regressors:
-            print("\n    Saving brands with regressors forecasts ...")
-            fbwr_path = os.path.join(
-                args.path.replace("data", "results"),
-                f"{args.country.lower()}_brands_forecasts_with_regressors.xlsx",
-            )
+            if args.markets:
+                print(
+                    "\n    Saving brands with regressors forecasts, markets included ..."
+                )
+                fbwr_path = os.path.join(
+                    args.path,
+                    f"{args.country.lower()}_brands_forecasts_with_regressors_markets_included.xlsx",
+                )
 
-            save_results_and_errors(
-                df_brands_fcst_res, df_brands_mape_errors, fbwr_path
-            )
+                save_results_and_errors(
+                    df_brands_wm_fcst_res, df_brands_wm_mape_errors, fbwr_path
+                )
+
+            if args.competition:
+                print(
+                    "\n    Saving brands with regressors forecasts, competition included ..."
+                )
+                fbwr_path = os.path.join(
+                    args.path,
+                    f"{args.country.lower()}_brands_forecasts_with_regressors_competition_included.xlsx",
+                )
+
+                save_results_and_errors(
+                    df_brands_wc_fcst_res, df_brands_wc_mape_errors, fbwr_path
+                )
 
     if args.forecast_brands_no_regressors:
         (
@@ -273,7 +416,7 @@ def main(args):
         if args.save_forecast_brands_no_regressors:
             print("\n    Saving brands no regressors forecasts ...")
             fbnr_path = os.path.join(
-                args.path.replace("data", "results"),
+                args.path,
                 f"{args.country.lower()}_brands_forecasts_no_regressors.xlsx",
             )
 
@@ -285,77 +428,177 @@ def main(args):
 
         gd = GrowthDrivers(dm, bel_markets)
 
-        dict_df_gd, dict_df_gd_scaled = gd.compute_growth_drivers_past(
-            df,
-            df_bel[args.growth_drivers_past],
-            bel_brands,
-            years=args.gd_years,
-            list_controllable_features=args.list_controllable_features,
-            controllable_features=args.controllable_features,
-        )
-
-        if args.verbose:
-            print("\n Growth Drivers Past All years \n==============================")
-            print(dict_df_gd["all"]["xgb_feature_importance"])
-
-            print(
-                "\n Growth Drivers Past All years rescaled \n======================================="
+        if args.markets:
+            dict_df_gd, dict_df_gd_scaled = gd.compute_growth_drivers_past(
+                df,
+                df_bel[args.growth_drivers_past],
+                bel_brands,
+                years=args.gd_years,
+                list_controllable_features=args.list_controllable_features,
+                controllable_features=args.controllable_features,
+                add_market=args.markets,
             )
-            print(dict_df_gd_scaled["all"]["xgb_feature_importance"])
-
-        if args.save_growth_drivers_past:
-            fgd_path = os.path.join(
-                args.path.replace("data", "results"),
-                f"{args.country.lower()}_growth_drivers_past",
+            print_growth_drivers_past(
+                args, dict_df_gd, dict_df_gd_scaled, folder="Markets"
             )
 
-            for year in dict_df_gd:
-                print("\n    Saving growth drivers past ...")
-                dict_df_gd[year]["xgb_feature_importance"].round(1).to_excel(
-                    fgd_path + "_{}.xlsx".format(year)
-                )
-
-                print(
-                    "\n    Saving growth drivers past rescaled controllable features ..."
-                )
-                dict_df_gd_scaled[year]["xgb_feature_importance"].round(1).to_excel(
-                    fgd_path + "_{}_controllable_features.xlsx".format(year)
-                )
+        if args.competition:
+            dict_df_gd, dict_df_gd_scaled = gd.compute_growth_drivers_past(
+                df,
+                df_bel[args.growth_drivers_past],
+                bel_brands,
+                years=args.gd_years,
+                list_controllable_features=args.list_controllable_features,
+                controllable_features=args.controllable_features,
+                add_competition=args.competition,
+            )
+            print_growth_drivers_past(
+                args, dict_df_gd, dict_df_gd_scaled, folder="Competition"
+            )
 
     if args.scenarios:
-        dscenarii = {
-            "A&P": args.scenario_a_and_p,
-            "Price per volume": args.scenario_price_per_volume,
-            "Promo Cost": args.scenario_promo_cost,
-            "Distribution": args.scenario_distribution,
-        }
 
-        # Ntimes number of years ahead we are predicting
-        df_total_results, df_total_resumed_results = forecast.compute_scenarii(
-            df_bel, dscenarii, ntimes=3
-        )
+        if args.cagr:
+            # Can be any value
+            start, nb_years = 10, 4
+            end = lambda k: start + (start * k / 100)
+            dscenarii = {
+                "A&P": [cagr(start, end(k), nb_years) for k in args.scenario_a_and_p],
+                "Price per volume": [
+                    cagr(start, end(k), nb_years)
+                    for k in args.scenario_price_per_volume
+                ],
+                "Promo Cost": [
+                    cagr(start, end(k), nb_years) for k in args.scenario_promo_cost
+                ],
+                "Distribution": [
+                    cagr(start, end(k), nb_years) for k in args.scenario_distribution
+                ],
+            }
+        else:
+            dscenarii = {
+                "A&P": args.scenario_a_and_p,
+                "Price per volume": args.scenario_price_per_volume,
+                "Promo Cost": args.scenario_promo_cost,
+                "Distribution": args.scenario_distribution,
+            }
 
-        if args.verbose:
-            print("\nScenarios\n==========")
-            print(dscenarii)
-            print("\n Total results\n=============")
-            print_df_overview(df_total_results)
-            print("\n Total resumed results\n=====================")
-            print_df_overview(df_total_resumed_results)
-
-        if args.save_scenarios:
-            s_path = os.path.join(
-                args.path.replace("data", "results"), f"{args.country.lower()}"
+        if args.markets:
+            # Ntimes number of years ahead we are predicting
+            (
+                df_total_wm_results,
+                df_total_resumed_wm_results,
+            ) = forecast.compute_scenarii(
+                df_bel,
+                dscenarii,
+                ntimes=3,
+                logistic=args.logistic,
+                add_market=True,
+                add_competition=False,
             )
 
-            df_total_results.round(1).to_excel(
-                s_path + "_all_brands_scenarii.xlsx",
-                index=False,
+            if args.verbose:
+                print("\nScenarios, markets included\n============================")
+                print(dscenarii)
+                print(
+                    "\n Total results, markets included\n"
+                    "================================="
+                )
+                print_df_overview(df_total_wm_results)
+                print(
+                    "\n Total resumed results, markets included\n"
+                    "========================================="
+                )
+                print_df_overview(df_total_resumed_wm_results)
+
+            if args.save_scenarios:
+                s_path = os.path.join(args.path, f"{args.country.lower()}")
+
+                df_total_wm_results.round(1).to_excel(
+                    s_path + "_all_brands_scenarii_markets.xlsx",
+                    index=False,
+                )
+                df_total_resumed_wm_results.round(1).to_excel(
+                    s_path + "_all_brands_resumed_scenarii_markets.xlsx",
+                    index=False,
+                )
+
+        if args.competition:
+            # Ntimes number of years ahead we are predicting
+            (
+                df_total_wc_results,
+                df_total_resumed_wc_results,
+            ) = forecast.compute_scenarii(
+                df_bel,
+                dscenarii,
+                ntimes=3,
+                logistic=args.logistic,
+                add_market=False,
+                add_competition=True,
             )
-            df_total_resumed_results.round(1).to_excel(
-                s_path + "_all_brands_resumed_scenarii.xlsx",
-                index=False,
+
+            if args.verbose:
+                print(
+                    "\nScenarios, competition included\n"
+                    "================================"
+                )
+                print(dscenarii)
+                print(
+                    "\n Total results, competition included\n"
+                    "====================================="
+                )
+                print_df_overview(df_total_wc_results)
+                print(
+                    "\n Total resumed results, competition included\n"
+                    "============================================="
+                )
+                print_df_overview(df_total_resumed_wc_results)
+
+            if args.save_scenarios:
+                s_path = os.path.join(args.path, f"{args.country.lower()}")
+
+                df_total_wc_results.round(1).to_excel(
+                    s_path + "_all_brands_scenarii_competition.xlsx",
+                    index=False,
+                )
+                df_total_resumed_wc_results.round(1).to_excel(
+                    s_path + "_all_brands_resumed_scenarii_competitionxlsx",
+                    index=False,
+                )
+
+        if (not args.markets) and (not args.competition):
+            # Ntimes number of years ahead we are predicting
+            (
+                df_total_wc_results,
+                df_total_resumed_wc_results,
+            ) = forecast.compute_scenarii(
+                df_bel,
+                dscenarii,
+                ntimes=3,
+                logistic=args.logistic,
+                add_market=False,
+                add_competition=True,
             )
+
+            if args.verbose:
+                print("\nScenarios\n" "===========")
+                print(dscenarii)
+                print("\n Total results\n" "=================")
+                print_df_overview(df_total_wc_results)
+                print("\n Total resumed results\n" "=======================")
+                print_df_overview(df_total_resumed_wc_results)
+
+            if args.save_scenarios:
+                s_path = os.path.join(args.path, f"{args.country.lower()}")
+
+                df_total_wc_results.round(1).to_excel(
+                    s_path + "_all_brands_scenarii.xlsx",
+                    index=False,
+                )
+                df_total_resumed_wc_results.round(1).to_excel(
+                    s_path + "_all_brands_resumed_scenarii.xlsx",
+                    index=False,
+                )
 
 
 if __name__ == "__main__":
@@ -423,6 +666,16 @@ if __name__ == "__main__":
         action="store_true",
     )
     parser.add_argument(
+        "--markets",
+        action="store_true",
+        help="Run Brands forecasts with regressors and Scenarios by including Markets sales (me included)",
+    )
+    parser.add_argument(
+        "--competition",
+        action="store_true",
+        help="Run Brands forecasts with regressors and Scenarios by including Competition sales (me excluded)",
+    )
+    parser.add_argument(
         "-pfb",
         "--plot-forecast-brands",
         help="Plot brands forecasts",
@@ -466,6 +719,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--scenarios", help="Compute giving scenarios", action="store_true"
+    )
+    parser.add_argument(
+        "--cagr", help="Transform given scenarios to cagr values", action="store_true"
     )
     parser.add_argument(
         "-ss", "--save-scenarios", help="Save scenarios results", action="store_true"

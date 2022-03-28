@@ -5,5 +5,7 @@
 *.sav
 *.txt
 *.pkl
+*.png
+*.xlsx
 settings.json
 .ipynb_checkpoints

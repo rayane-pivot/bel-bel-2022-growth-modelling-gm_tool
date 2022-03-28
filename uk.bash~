@@ -3,7 +3,7 @@ country="KSA"
 geo="SA"
 python main.py \
        --country $country \
-       --path "/Users/ahmed/Projects/gm_tool/data/${country}/${1}/" \
+       --path "/Users/ahmed/Projects/gm_tool/data/${country}/" \
        --months \
        --periods 36 \
        --geo $geo \
