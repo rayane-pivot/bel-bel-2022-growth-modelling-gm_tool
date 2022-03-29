@@ -10,7 +10,7 @@ class Model:
     def __init__(self):
         pass
 
-    def brand_pos(self, df, year_min: int):
+    def brand_pos(self, df, year_min:int, values:str):
         """Brand Positioning Matrix
         pivot df to return Brand/Category/Sales in volume
 
@@ -24,7 +24,7 @@ class Model:
         df = df[df.Date.dt.year >= year_min]
         brand_positioning_matrix = pd.pivot_table(
             df,
-            values="Sales in volume",
+            values=values,
             columns="Category",
             index="Brand",
             aggfunc="sum",
@@ -34,7 +34,7 @@ class Model:
         brand_positioning_matrix.index.name = "Brand"
         return brand_positioning_matrix.div(1000)
 
-    def cat_yearly_sales(self, df, on: str):
+    def cat_yearly_sales(self, df, on:str, values:str):
         """Brand Positioning Matrix
         compute sales in volume per year
 
@@ -48,17 +48,17 @@ class Model:
         df.Date = pd.to_datetime(df.Date)
 
         df_grp = (
-            df.groupby([on, pd.Grouper(key="Date", freq="Y")])["Sales in volume"]
+            df.groupby([on, pd.Grouper(key="Date", freq="Y")])[values]
             .agg("sum")
             .reset_index()
         )
         df_grp.Date = df_grp.Date.dt.year
-        table = pd.pivot_table(df_grp, columns=on, index="Date", values="Sales in volume")
+        table = pd.pivot_table(df_grp, columns=on, index="Date", values=values)
         table=table.div(1000)
 
         return table
 
-    def growth(self, df, on: str, year1: int, year2: int):
+    def growth(self, df, on: str, year1: int, year2: int, values:str):
         """Brand Positioning Matrix
         compute growth and cagr for brands and categories
 
@@ -79,13 +79,13 @@ class Model:
 
             """
             y1 = (
-                x[x.Date.dt.year == year1]["Sales in volume"].values[0]
-                if len(x[x.Date.dt.year == year1]["Sales in volume"].values) > 0
+                x[x.Date.dt.year == year1][values].values[0]
+                if len(x[x.Date.dt.year == year1][values].values) > 0
                 else None
             )
             y2 = (
-                x[x.Date.dt.year == year2]["Sales in volume"].values[0]
-                if len(x[x.Date.dt.year == year2]["Sales in volume"].values) > 0
+                x[x.Date.dt.year == year2][values].values[0]
+                if len(x[x.Date.dt.year == year2][values].values) > 0
                 else None
             )
 
@@ -101,13 +101,13 @@ class Model:
 
             """
             y1 = (
-                x[x.Date.dt.year == year1]["Sales in volume"].values[0]
-                if len(x[x.Date.dt.year == year1]["Sales in volume"].values) > 0
+                x[x.Date.dt.year == year1][values].values[0]
+                if len(x[x.Date.dt.year == year1][values].values) > 0
                 else 0.0
             )
             y2 = (
-                x[x.Date.dt.year == year2]["Sales in volume"].values[0]
-                if len(x[x.Date.dt.year == year2]["Sales in volume"].values) > 0
+                x[x.Date.dt.year == year2][values].values[0]
+                if len(x[x.Date.dt.year == year2][values].values) > 0
                 else 0.0
             )
             return y2 - y1
@@ -116,7 +116,7 @@ class Model:
         df.Date = pd.to_datetime(df.Date)
 
         df_grp = (
-            df.groupby([on, pd.Grouper(key="Date", freq="Y")])["Sales in volume"]
+            df.groupby([on, pd.Grouper(key="Date", freq="Y")])[values]
             .agg("sum")
             .reset_index()
         )
@@ -146,11 +146,12 @@ class Model:
 
         """
         # Compute brand positioning matrix, cagr and growth
-        brand_positioning_matrix = self.brand_pos(df, year_min=year_min)
-        growth_brand = self.growth(df, on="Brand", year1=year1, year2=year2)
-        growth_category = self.growth(df, on="Category", year1=year1, year2=year2)
+        values = "Sales in volume"
+        brand_positioning_matrix = self.brand_pos(df, year_min=year_min, values=values)
+        growth_brand = self.growth(df, on="Brand", year1=year1, year2=year2, values=values)
+        growth_category = self.growth(df, on="Category", year1=year1, year2=year2, values=values)
 
-        cat_yearly_sales = self.cat_yearly_sales(df, on="Category")
+        cat_yearly_sales = self.cat_yearly_sales(df, on="Category", values=values)
 
         # Concat brand positioning matrix, cagr and growth
         brand_positioning_matrix = pd.concat(
@@ -193,7 +194,17 @@ class Model:
             """
             if "Price per volume" in x.columns:
                 return x[x.Date.dt.year == year]["Price per volume"].agg("mean")
+        
+        def median_price(x):
+            """local function for groupby apply
 
+            :param x:
+            :returns: average of Price per volume for year
+
+            """
+            if "Price per volume" in x.columns:
+                return x[x.Date.dt.year == year]["Price per volume"].agg("median")
+        
         def promo(x):
             """local function for groupby apply
 
@@ -214,13 +225,29 @@ class Model:
             if "Sales in volume" in x.columns:
                 return x[x.Date.dt.year == year]["Sales in volume"].agg("sum")/1000
 
+        def avg_distrib(x):
+            if "Distribution" in x.columns:
+                return x[x.Date.dt.year == year]["Distribution"].agg("mean")
+        
+        def median_distrib(x):
+            if "Distribution" in x.columns:
+                return x[x.Date.dt.year == year]["Distribution"].agg("median")
+        
         df_bel = df_bel.copy()
         df_bel.Date = pd.to_datetime(df_bel.Date)
         df_grp = (
             df_bel.groupby(["Brand", pd.Grouper(key="Date", freq="Y")])
             .apply(
                 lambda r: pd.Series(
-                    {"A&P 2021": ap(r), "Price 2021": price(r), "Promo 2021": promo(r), "Size 2021": size(r)}
+                    {
+                        "A&P 2021": ap(r), 
+                        "Avg Price 2021": price(r), 
+                        "Median Price 2021": median_price(r), 
+                        "Promo 2021": promo(r), 
+                        "Size 2021": size(r), 
+                        "Avg Distribution 2021": avg_distrib(r), 
+                        "Median Distribution 2021": median_distrib(r)
+                    }
                 )
             )
             .reset_index()
@@ -244,15 +271,37 @@ class Model:
 
         df = df.copy()
         df.Date = pd.to_datetime(df.Date)
-        distrib = (
+        # distrib = (
+        #     df[df.Brand.isin(bel_brands)]
+        #     .groupby(["Brand", pd.Grouper(key="Date", freq="Y")])["Distribution"]
+        #     .mean()
+        #     .reset_index()
+        # )
+        # distrib = distrib.loc[distrib[distrib.Date.dt.year == year].index, :]
+        # print(distrib)
+        # distrib = distrib.rename(columns={'Distribution':'Avg Distribution'})
+
+        # new_distrib = (
+        #     df[df.Brand.isin(bel_brands)]
+        #     .groupby(["Brand", pd.Grouper(key="Date", freq="Y")])["Distribution"]
+        #     .median()
+        #     .reset_index()
+        # )
+        # new_distrib = new_distrib.loc[new_distrib[new_distrib.Date.dt.year == year].index, :]
+        # new_distrib = new_distrib.rename(columns={'Distribution':'Median Distribution'})
+
+        new_promo = (
             df[df.Brand.isin(bel_brands)]
-            .groupby(["Brand", pd.Grouper(key="Date", freq="Y")])["Distribution"]
-            .mean()
+            .groupby(["Brand", pd.Grouper(key="Date", freq="Y")])["Sales in volume", "Sales volume with promo"]
+            .sum()
             .reset_index()
         )
-        distrib = distrib.loc[distrib[distrib.Date.dt.year == year].index, :]
+        new_promo = new_promo.loc[new_promo[new_promo.Date.dt.year == year].index, :]
+        new_promo["New Promo"] = new_promo["Sales volume with promo"] / new_promo["Sales in volume"]
 
-        df_attack_init_state = pd.merge(df_temp, distrib, on=["Brand", "Date"])
+        # df_attack_init_state = pd.merge(df_temp, distrib, on=["Brand", "Date"])
+        # df_attack_init_state = pd.merge(df_attack_init_state, new_distrib, on=["Brand", "Date"])
+        df_attack_init_state = pd.merge(df_temp, new_promo, on=["Brand", "Date"])
         df_attack_init_state = df_attack_init_state.drop(columns=["Date"])
         return df_attack_init_state
 
