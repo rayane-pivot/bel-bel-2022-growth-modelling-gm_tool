@@ -1,4 +1,4 @@
-#GROWTH MODELLING (GM)
+# GROWTH MODELLING (GM)
 
 The growth modelling project aims to help **BEL** analyse their *brands*, their *markets*, and set *achievable strategic growth* plans for the next $3$ years based on the models we built and the insights we gathered. 
 
@@ -28,6 +28,6 @@ which consists of forecasting the distinct categories of cheese, which are prese
 
 
 ### Authors : 
-@raoulnh : Senior Data Lead
-@augustePivot : Data Scientist
-@balde_ahmed : Machine Learning Scientist
+- @raoulnh : Senior Data Lead
+- @augustePivot : Data Scientist
+- @balde_ahmed : Machine Learning Scientist
