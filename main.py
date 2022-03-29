@@ -3,9 +3,10 @@ import datetime as dt
 import itertools
 import os
 import pprint
+import warnings
 
 import pandas as pd
-from openpyxl import load_workbook
+from pandas.core.common import SettingWithCopyWarning
 
 import utils
 from datamanager.DataManager import DataManager
@@ -13,6 +14,10 @@ from model.Forecast import Forecast
 from model.GrowthDrivers import GrowthDrivers
 from utils.tools import cagr, print_df_overview
 from utils.trends import compute_trends
+
+warnings.simplefilter(action="ignore", category=FutureWarning)
+warnings.simplefilter(action="ignore", category=SettingWithCopyWarning)
+
 
 PATH_TO_PARAMS = "assets/params.json"
 PATH_TO_OUTPUTS = "view/"
@@ -173,17 +178,23 @@ def main(args):
     if args.path:
         df = pd.read_excel(os.path.join(args.path, "df.xlsx"))
         df["Date"] = pd.to_datetime(df.Date, format="%Y-%m-%d")
+
+        df_bel = pd.read_excel(args.path + "df_bel.xlsx")
+        df_bel["Date"] = pd.to_datetime(df_bel.Date, format="%Y-%m-%d")
+
+        last_year_data = 2021
+        if args.country == "KSA":
+            df = df[df.Date.dt.year <= last_year_data]
+            df_bel = df_bel[df_bel.Date.dt.year <= last_year_data]
+
         df["Date"] = df.Date.apply(lambda x: x.strftime("%Y-%m-%d"))
+        df_bel["Date"] = df_bel.Date.apply(lambda x: x.strftime("%Y-%m-%d"))
 
         # Ad-hoc CAN, replace "ERR" by 0
         if args.country == "CAN":
             df[["Price per volume", "Price with promo"]] = df.replace("ERR", 0)[
                 ["Price per volume", "Price with promo"]
             ].applymap(float)
-
-        df_bel = pd.read_excel(args.path + "df_bel.xlsx")
-        df_bel["Date"] = pd.to_datetime(df_bel.Date, format="%Y-%m-%d")
-        df_bel["Date"] = df_bel.Date.apply(lambda x: x.strftime("%Y-%m-%d"))
 
         if args.country == "GER":
             df_brands_sales = pd.read_excel(
@@ -562,7 +573,7 @@ def main(args):
                     index=False,
                 )
                 df_total_resumed_wc_results.round(1).to_excel(
-                    s_path + "_all_brands_resumed_scenarii_competitionxlsx",
+                    s_path + "_all_brands_resumed_scenarii_competition.xlsx",
                     index=False,
                 )
 
@@ -604,7 +615,7 @@ def main(args):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path", type=str, help="Path to df_bel.xlxs, and df.xlxs")
+    parser.add_argument("--path", type=str, help="Path to df_bel.xlsx, and df.xlsx")
     parser.add_argument("--periods", type=int, help="Number of periods to predict")
     parser.add_argument(
         "--country", type=str, help="Country code for which we are computing insights"

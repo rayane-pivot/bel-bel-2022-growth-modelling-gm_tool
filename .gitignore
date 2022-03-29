@@ -7,5 +7,7 @@
 *.pkl
 *.png
 *.xlsx
+data/
+results/
 settings.json
 .ipynb_checkpoints
