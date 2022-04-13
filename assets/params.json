@@ -435,11 +435,9 @@
         "brand scorecard":{
            "date_min":"2017-12-31",
            "awareness":{
-               "BOURSIN":76.0000,
-               "LA VACHE QUI RIT":88.0000, 
-               "MINI BABYBEL":85.0000, 
-               "NURISHH":1.0000, 
-               "KIRI":19.0000
+               "JIBNET ABOU AL WALAD":69.0000,
+               "LA VACHE QUI RIT":75.0000, 
+               "KIRI":85.0000
            }
         },
         "attack_init_state":{
@@ -623,16 +621,15 @@
            "year2" : 2021,
            "year_min" : 2019
        },
+
        "brand scorecard":{
            "date_min":"2017-12-31",
            "awareness":{
-               "ADLER":22.000,
-               "BONBEL":60.000,
-               "BOURSIN":16.000,
-               "BABYBEL":84.000,
-               "LA VACHE QUI RIT":24.000,
-               "KIRI":73.000,
-               "NURISHH":2.000
+               "BOURSIN":68.000,
+               "THE LAUGHING COW":85.000,
+               "MINI BABYBEL":88.000,
+               "PORT SALUT":35.000,
+               "NURISHH":3.000
            }
            
         },
@@ -649,8 +646,8 @@
         "dict_path" :
         {
             "PATH_SALES":{"Total Country":"data/JP/Growth Modelling - JPN - 2019-2022 - Sell-Out Data.xlsx"},
-            "PATH_INNO" : {"Total Country":"data/"},
-            "PATH_FINANCE" : {"Total Country":"data/"}
+            "PATH_INNO" : {"Total Country":"data/JP/Growth Modelling - JAP - 2018-2021 - Sell-Out Data (Intage) Rate of Innovation - CONSOLIDATED.xlsx"},
+            "PATH_FINANCE" : {"Total Country":"data/JP/Growth Modelling - JAP - 2019-2021 - Local Finance Data (SAP - Flux Rio) MVC-AP CONSOLIDATED.xlsx"}
         },
         "sales_renaming_columns":[
             "Date",
@@ -691,11 +688,10 @@
             }
         },
        "bel_brands": [
-           "BOURSIN",
-           "THE LAUGHING COW",
-           "MINI BABYBEL",
-           "PORT SALUT",
-           "NURISHH"
+            "KIRI & STICK",
+            "KIRI BLOCK",
+            "KIRI PORTION",
+            "KIRI SPREAD"
        ],
         "sales_date_format":"1 w/e %d %b, %Y",
         "date_format":"%Y-%m-%d",
@@ -707,10 +703,10 @@
         "A&P_codes":["000BQ - BOURSIN", "000LA - THE LAUGHING COW", "000MB - MINI BABYBEL", "000PF - PORT SALUT", "003NH - NURISHH"],
         "A&P_columns":["YEAR EPM", "MANAGERIAL EPM", "CODE EPM", "R4100 - ADVERTISING", "R4200 - PROMOTION - CONSUMERS", "R1000 - NET SALES", "MVC - Margin on variable costs"],
         "finance_renaming_columns":["Year", "Country", "Brand", "Advertising", "Promotion", "Sell-in", "MVC"],
-        "dates_finance":{"Min": "2017-12-31", "Max": "2021-12-26"},
+        "dates_finance":{"Min": "2017-12-31", "Max": "2023-01-01"},
         "Inno":{
            "header":[7],
-           "date_beg":"2019-01-12",
+           "date_beg":"2018-03-19",
            "innovation_duration":104,
            "brand_column_name" : "Name  [ MAJOR BRAND_CDC1 ]",
            "date_format":"1 w/e %d %b, %Y",
@@ -729,13 +725,112 @@
        "brand scorecard":{
            "date_min":"2017-12-31",
            "awareness":{
-               "ADLER":22.000,
-               "BONBEL":60.000,
-               "BOURSIN":16.000,
-               "BABYBEL":84.000,
-               "LA VACHE QUI RIT":24.000,
-               "KIRI":73.000,
-               "NURISHH":2.000
+               "KIRI & STICK":85.000,
+               "KIRI BLOCK":85.000,
+               "KIRI PORTION":85.000,
+               "KIRI SPREAD":85.000
+           }
+           
+        },
+        "attack_init_state":{
+           "year":2021
+       },
+       "Capacity to Win":{
+           "year_min":2019,
+           "fragmentation n_brands":5,
+           "inno_year_min":2020
+       }
+    },
+    "BEL":{
+        "dict_path" :
+        {
+            "PATH_SALES":{"Total Country":"data/BEL/Growth Modeling - Belgium - 2019-2021 - Sell-Out Data (Nielsen) (2).xlsx"},
+            "PATH_INNO" : {"Total Country":"data/BEL/Growth Modeling - Belgium - 2019-2021 - Sell-Out Data (Nielsen) - Rate Of Innovation.xlsx"},
+            "PATH_FINANCE" : {"Total Country":"data/BEL/Growth Modelling - BELG - 2018-2021 - Local Finance Data (SAP - Flux Rio).xlsx"}
+        },
+        "sales_renaming_columns":[
+            "Date",
+            "Product",
+            "Market",
+            "Category",
+            "Sub Category",
+            "Brand",
+            "Sales in value",
+            "Sales value with promo",
+            "Sales in volume",
+            "Sales volume with promo",
+            "Price with promo",
+            "Price per volume",
+            "Price without promo",
+            "Weighted Distribution",
+            "Distribution"
+       ],
+       "sales_renaming_columns_dict" : {
+            "CATEGORICALS":{
+                "CATEGORY_PPC3  [ CATEGORY_PPC3 ]":"Market", 
+                "SUBCATEGORY_PPC3  [ SUBCATEGORY_PPC3 ]":"Category",
+                "SECTOR_PPC3  [ SECTOR_PPC3 ]":"Sub Category", 
+                "MAJOR BRAND_PPC3  [ MAJOR BRAND_PPC3 ]":"Brand",
+                "Product": "Product",
+                "Time": "Date"
+            },
+            "KPIS":{
+                "Value Sales":"Sales in value", 
+                "Incremental Value" : "Sales value with promo",
+                "Volume Sales": "Sales in volume", 
+                "Incremental Volume" : "Sales volume with promo",
+                "Avg Volume Price": "Price per volume", 
+                "Avg Volume Price Any Trade Promotion" : "Price with promo",
+                "Avg Volume Price No Promotion" : "Price without promo",
+                "Total Points ACV Wtd Distribution":"Distribution",
+                "% Stores Selling" : "Distribution2"
+            }
+        },
+       "bel_brands": [
+            "VACHE QUI RIT",
+            "APERICUBE",
+            "MAREDSOUS",
+            "KIRI",
+            "BABYBEL",
+            "NURISHH",
+            "BOURSIN"
+       ],
+        "sales_date_format":"1 w/e %d %b, %Y",
+        "date_format":"%Y-%m-%d",
+        "header_lines":[0],
+        "sheet_name":["Sales Volume (kgs)", "Sales Value (K JPY)", "Avg Price per Volume (K JPY)", "Avg Price per Pack (JPY)", "TDP SKU Gross Weighted Distrib"],
+        "source":"Nielsen",
+        "date_max":"2022-01-01",
+        "drop_levels":0,
+        "A&P_codes":["000BQ - BOURSIN", "000LA - THE LAUGHING COW", "000MB - MINI BABYBEL", "000PF - PORT SALUT", "003NH - NURISHH"],
+        "A&P_columns":["YEAR EPM", "MANAGERIAL EPM", "CODE EPM", "R4100 - ADVERTISING", "R4200 - PROMOTION - CONSUMERS", "R1000 - NET SALES", "MVC - Margin on variable costs"],
+        "finance_renaming_columns":["Year", "Country", "Brand", "Advertising", "Promotion", "Sell-in", "MVC"],
+        "dates_finance":{"Min": "2017-12-31", "Max": "2023-01-01"},
+        "Inno":{
+           "header":[7],
+           "date_beg":"2018-03-19",
+           "innovation_duration":104,
+           "brand_column_name" : "Name  [ MAJOR BRAND_CDC1 ]",
+           "date_format":"1 w/e %d %b, %Y",
+           "week_name" : "w/e",
+           "columns_to_remove":["Product", "Name  [ CATEGORY GROUP_CDC1 ]", "Name  [ CATEGORY_CDC1 ]", "Name  [ SUBCATEGORY_CDC1 ]"]
+       },
+       "Finance":{
+           "header":[0],
+           "sheet_names" : ["R4100 - ADVERTISING", "R4200 - PROMOTION - CONSUMERS", "MVC"]
+        },
+        "brand_positioning_matrix":{
+           "year1" : 2019,
+           "year2" : 2021,
+           "year_min" : 2019
+       },
+       "brand scorecard":{
+           "date_min":"2017-12-31",
+           "awareness":{
+               "KIRI & STICK":85.000,
+               "KIRI BLOCK":85.000,
+               "KIRI PORTION":85.000,
+               "KIRI SPREAD":85.000
            }
            
         },

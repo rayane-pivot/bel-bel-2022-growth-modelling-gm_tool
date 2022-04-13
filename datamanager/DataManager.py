@@ -6,6 +6,10 @@ from pydoc import locate
 
 import pandas as pd
 
+class EmptyDataFrameError(Exception):
+    def __init__(self, message):            
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
 
 class DataManager:
     """ABSTRACT class for sales data"""
@@ -210,25 +214,13 @@ class DataManager:
         print("columns and types are correct")
 
     def get_df(self):
-        """get df
-
-        :returns: df
-
-        """
-        assert (
-            not self._df.empty
-        ), "df is empty, call ad_hoc_COUNTRY() or load_df() first"
+        if self._df.empty:
+            raise EmptyDataFrameError("df is empty, call ad_hoc_COUNTRY() or load_df() first")
         return self._df
 
     def get_df_bel(self):
-        """get df_bel
-
-        :returns: df_bel
-
-        """
-        assert (
-            not self._df_bel.empty
-        ), "df_bel is empty, call fill_df_bel() or load_df_bel() first"
+        if self._df_bel.empty:
+            raise EmptyDataFrameError("df_bel is empty, call fill_df_bel() or load_df_bel() first")
         return self._df_bel
 
     def get_df_competition_brands(self, df, features, brands_name, bel_markets):

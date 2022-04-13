@@ -124,7 +124,7 @@ class DM_UK(DataManager):
             lambda x: self.count_num_sundays_in_month(x.Year, x.Month), axis=1
         )
         df_finance["A&P"] = df_finance.apply(
-            lambda x: (x.Advertising + x.Promotion) / x["number of weeks"] * 1000,
+            lambda x: (x.Advertising + x.Promotion) / x["number of weeks"],
             axis=1,
         )
         

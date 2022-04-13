@@ -5,6 +5,7 @@ import datetime as dt
 
 from datamanager.DM_UK import DM_UK
 from model.Model import Model
+from model.Capacity_To_win import Capacity_To_Win
 
 PATH_TO_PARAMS = "assets/params.json"
 
@@ -19,8 +20,8 @@ def main() -> None:
     data_manager.ad_hoc_UK(json_sell_out_params=json_sell_out_params)
     data_manager.fill_df_bel(json_sell_out_params=json_sell_out_params)
 
-    # data_manager.get_df().to_excel(f"view/UK/{country}_df_{date.strftime('%d%m')}.xlsx", index=False)
-    # data_manager.get_df_bel().to_excel(f"view/UK/{country}_df_bel_{date.strftime('%d%m')}.xlsx", index=False)
+    data_manager.get_df().to_excel(f"view/UK/{country}_df_{date.strftime('%d%m')}.xlsx", index=False)
+    data_manager.get_df_bel().to_excel(f"view/UK/{country}_df_bel_{date.strftime('%d%m')}.xlsx", index=False)
 
     model = Model()
 
@@ -52,6 +53,25 @@ def main() -> None:
     # attack_init_state.to_excel(
     #     f"view/UK/{country}_attack_init_state_{date.strftime('%d%m')}.xlsx", index=False
     # )
+    
+    capacity_to_win = Capacity_To_Win()
+    (
+        df_brand_scaled,
+        df_category_scaled,
+        df_market_brand_scaled,
+        capacity_to_win,
+    ) = capacity_to_win.compute_Capacity_to_Win(
+        df=data_manager.get_df(),
+        df_bel=data_manager.get_df_bel(),
+        json_sell_out_params=json_sell_out_params,
+        country=country,
+    )
+
+    # with pd.ExcelWriter(f"view/{country}/capacity_to_win_{date.strftime('%d%m')}.xlsx") as writer:
+    #     df_brand_scaled.to_excel(writer, sheet_name='Brand_Score')
+    #     df_category_scaled.to_excel(writer, sheet_name='Market_Score')
+    #     df_market_brand_scaled.to_excel(writer, sheet_name='Market_Brand_Score')
+    #     capacity_to_win.to_excel(writer, sheet_name='CTW')
 
 if __name__ == "__main__":
     main()

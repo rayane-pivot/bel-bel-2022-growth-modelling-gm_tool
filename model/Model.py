@@ -36,12 +36,6 @@ class Model:
 
     def cat_yearly_sales(self, df, on:str, values:str):
         """Brand Positioning Matrix
-        compute sales in volume per year
-
-        :param df:
-        :param on:
-        :returns:
-
         """
 
         df = df.copy()
@@ -56,7 +50,20 @@ class Model:
         table = pd.pivot_table(df_grp, columns=on, index="Date", values=values)
         table=table.div(1000)
 
-        return table
+        ###Price
+        df_grp = (
+            df.groupby([on, pd.Grouper(key="Date", freq="Y")])["Price per volume"]
+            .agg(["mean", "median"])
+            .reset_index()
+        )
+        df_grp.Date = df_grp.Date.dt.year
+        mean_price_table = pd.pivot_table(df_grp, columns=on, index="Date", values="mean")
+        mean_price_table = mean_price_table.rename(index={date : f"{date} mean Price" for date in mean_price_table.index.values})
+        median_price_table = pd.pivot_table(df_grp, columns=on, index="Date", values="median")
+        median_price_table = median_price_table.rename(index={date : f"{date} median Price" for date in median_price_table.index.values})
+        cat_yearly_sales = pd.concat([table, mean_price_table, median_price_table])
+
+        return cat_yearly_sales
 
     def growth(self, df, on: str, year1: int, year2: int, values:str):
         """Brand Positioning Matrix
@@ -289,19 +296,22 @@ class Model:
         # )
         # new_distrib = new_distrib.loc[new_distrib[new_distrib.Date.dt.year == year].index, :]
         # new_distrib = new_distrib.rename(columns={'Distribution':'Median Distribution'})
-
-        new_promo = (
-            df[df.Brand.isin(bel_brands)]
-            .groupby(["Brand", pd.Grouper(key="Date", freq="Y")])["Sales in volume", "Sales volume with promo"]
-            .sum()
-            .reset_index()
-        )
-        new_promo = new_promo.loc[new_promo[new_promo.Date.dt.year == year].index, :]
-        new_promo["New Promo"] = new_promo["Sales volume with promo"] / new_promo["Sales in volume"]
-
+        if "Sales volume with promo" in df.columns:
+            new_promo = (
+                df[df.Brand.isin(bel_brands)]
+                .groupby(["Brand", pd.Grouper(key="Date", freq="Y")])["Sales in volume", "Sales volume with promo"]
+                .sum()
+                .reset_index()
+            )
+            new_promo = new_promo.loc[new_promo[new_promo.Date.dt.year == year].index, :]
+            new_promo["New Promo"] = new_promo["Sales volume with promo"] / new_promo["Sales in volume"]
+            df_attack_init_state = pd.merge(df_temp, new_promo, on=["Brand", "Date"])
+        else :
+            df_attack_init_state = df_temp
         # df_attack_init_state = pd.merge(df_temp, distrib, on=["Brand", "Date"])
         # df_attack_init_state = pd.merge(df_attack_init_state, new_distrib, on=["Brand", "Date"])
-        df_attack_init_state = pd.merge(df_temp, new_promo, on=["Brand", "Date"])
+        
+        
         df_attack_init_state = df_attack_init_state.drop(columns=["Date"])
         return df_attack_init_state
 

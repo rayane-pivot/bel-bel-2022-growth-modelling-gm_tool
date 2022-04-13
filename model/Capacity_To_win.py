@@ -78,11 +78,11 @@ class Capacity_To_Win():
         df_size = compute_size(df)
         df_cagr = self.compute_cagr(df, by="Category", year_min=year_min)
         df_FI = compute_fragmentation_index(df, frag_n_brands=frag_n_brands)
-        df_PI = compute_promotion_intensity(df)
-
         df_category = pd.merge(df_size, df_cagr, on="Category")
         df_category = pd.merge(df_category, df_FI, on="Category")
-        df_category = pd.merge(df_category, df_PI, on="Category")
+        if "Sales volume with promo" in df.columns:
+            df_PI = compute_promotion_intensity(df)
+            df_category = pd.merge(df_category, df_PI, on="Category")
         return df_category.set_index("Category")
 
     def compute_Brand_Matrix(
@@ -102,6 +102,7 @@ class Capacity_To_Win():
 
         def handle_brand(df, brand):
             # Fill brand with Os
+            print(f"<handle_brand> {brand}")
             date_min = df.Date.min()
             date_max = df.Date.max()
             df_brand = df[df.Brand == brand]
@@ -188,11 +189,11 @@ class Capacity_To_Win():
 
         def compute_expertise(df, df_bel):
             # Expertise = Questionnaire Bel (Match between Brand on Market) = un truc random
-            df_expertise = pd.read_excel("data/France/questionnaire.xlsx").set_index("Category")
-            # brands = df_bel.Brand.unique()
-            # # categories = df.Category.unique()
+            df_expertise = pd.read_excel("data/JP/questionnaire.xlsx").set_index("Category")
+            #brands = df_bel.Brand.unique()
             # categories = df.Category.unique()
-            # # return pd.DataFrame(np.random.randint(0, 100, size=(len(categories), len(brands))), columns=brands, index=categories)
+            #categories = df.Category.unique()
+            # return pd.DataFrame(np.random.randint(0, 100, size=(len(categories), len(brands))), columns=brands, index=categories)
             # return pd.DataFrame(
             #     np.zeros((len(categories), len(brands))),
             #     columns=brands,
@@ -216,11 +217,17 @@ class Capacity_To_Win():
             df_category["Size"] = Size_scaler.fit_transform(df_category[["Size"]])
             df_category["CAGR"] = CAGR_scaler.fit_transform(df_category[["CAGR"]])
             df_category["FI"] = FI_scaler.fit_transform(df_category[["FI"]])
-            df_category["PI"] = PI_scaler.fit_transform(df_category[["PI"]])
+            ### very ad hoc, fix this
+            if "PI" in df_category.columns:
+                df_category["PI"] = PI_scaler.fit_transform(df_category[["PI"]])
 
             df_category = df_category.fillna(0)
-
-            df_category["Total"] = df_category[["Size", "CAGR", "FI", "PI"]].sum(axis=1)
+            
+            ### very ad hoc, fix this
+            if "PI" in df_category.columns:
+                df_category["Total"] = df_category[["Size", "CAGR", "FI", "PI"]].sum(axis=1)
+            else :
+                df_category["Total"] = df_category[["Size", "CAGR", "FI"]].sum(axis=1)
             return df_category
 
         def scale_brand(df_brand):
@@ -333,8 +340,8 @@ class Capacity_To_Win():
     def compute_Capacity_to_Win(self, df, df_bel, json_sell_out_params, country: str):
         df = df.copy()
         df_bel = df_bel.copy()
-        df["Date"] = pd.to_datetime(df["Date"])
-        df_bel["Date"] = pd.to_datetime(df_bel["Date"])
+        df["Date"] = pd.to_datetime(df["Date"], format="%Y-%m")
+        df_bel["Date"] = pd.to_datetime(df_bel["Date"], format="%Y-%m")
 
         YEAR_MIN = (
             json_sell_out_params.get(country).get("Capacity to Win").get("year_min")

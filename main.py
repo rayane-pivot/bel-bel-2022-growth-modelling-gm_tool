@@ -562,7 +562,7 @@ def main(args):
                     index=False,
                 )
                 df_total_resumed_wc_results.round(1).to_excel(
-                    s_path + "_all_brands_resumed_scenarii_competitionxlsx",
+                    s_path + "_all_brands_resumed_scenarii_competition.xlsx",
                     index=False,
                 )
 

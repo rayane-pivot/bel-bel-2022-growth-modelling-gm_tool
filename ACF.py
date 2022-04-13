@@ -2,10 +2,13 @@ import json
 import datetime as dt
 import argparse
 import warnings
+import time
+import random 
 
-from pandas.core.common import SettingWithCopyWarning
 import pandas as pd
+import numpy as np
 from prophet import Prophet
+from pandas.core.common import SettingWithCopyWarning
 from sklearn.metrics import mean_absolute_percentage_error
 
 from datamanager.DataManager import DataManager
@@ -54,25 +57,35 @@ def generate_targets(data_manager:DataManager, channel:str=None) -> dict:
         df_bel = data_manager.get_df_bel()
     
     print(f"<generate_targets> generating {df.Category.nunique() * df_bel.Brand.nunique() = } targets")
-
-    for brand in df_bel.Brand.unique():
-        for category in df.Category.unique():
+    bel_brands = np.append(["BOURSIN"], df_bel.Brand.unique())
+    print(bel_brands)
+    for category in df.Category.unique():
+        #for brand in df_bel.Brand.unique():
+        for brand in bel_brands:
             n_categories = df[df.Brand==brand].Category.nunique()
+            n_sub_categories = df[df.Brand==brand]["Sub Category"].nunique()
             sub_cat = df[df.Category==category].groupby('Sub Category')['Sales in volume'].agg('sum').sort_values(ascending=False).index[0]
             distribution = df[df.Category==category].Distribution.mean()
-            price = df[df.Category==category]['Price per volume'].median()
-            price_no_promo = df[df.Category==category]['Price without promo'].median()
+            price = df[df.Category==category]['Price per volume'].mean()
+            
+            own_distribution = df[df.Brand==brand].Distribution.mean()
+            own_price = df[df.Brand==brand]['Price per volume'].mean()
+
+            if 'Price without promo' in df.columns:
+                price_no_promo = df[df.Category==category]['Price without promo'].median()
+            else :
+                price_no_promo = df[df.Category==category]['Price per volume'].mean()
             target ={
                 'Brand': brand,
                 'Category': category,
                 'Sub Category': sub_cat,
                 'Number of Categories': n_categories,
-                'Number of Sub Categories': 1.0,
+                'Number of Sub Categories': n_sub_categories,
                 'Date': "2022-01-01",
                 'Period': 1,
-                'Distribution': distribution,
-                'Price per volume': price,
-                'Price per volume without promo': price_no_promo
+                'Distribution': (2*distribution + own_distribution)/3,
+                'Price per volume': (2*price + own_price)/3,
+                'Price per volume without promo': price_no_promo,
             }
             targets.append(target)
 
@@ -83,17 +96,18 @@ def build_profile(neighbors, df_sub, df, le_brand, le_cat, le_sub_cat):
     df_temp['Category'] = le_cat.inverse_transform(df_temp['Category'])
     df_temp['Sub Category'] = le_sub_cat.inverse_transform(df_temp['Sub Category'])
     df_temp['Brand'] = le_brand.inverse_transform(df_temp['Brand'])
+    #df_merge = pd.merge(df_temp[['Category', 'Sub Category']], df, on=['Category', 'Sub Category'], how='left')
     df_merge = pd.merge(df_temp[['Category', 'Sub Category', 'Brand']], df, on=['Category', 'Sub Category', 'Brand'], how='left')
     profile = df_merge.groupby('Date')['Sales in volume'].agg('mean')
     return profile
 
-def forecast_profile(profile, target, periods=157, freq='W', plot=False):
+def forecast_profile(profile, target, periods=157, freq='M', plot=False):
     """ Forecasting profile using Prophet logistic growth giving the profile, 
     the targets for plotting useful information, and finally the periods and 
     freq of projection.
 
     """
-    model_err = Prophet(growth='logistic', yearly_seasonality=20)
+    model_err = Prophet(growth='logistic', daily_seasonality=False, weekly_seasonality=False)
     
     # Adding Cap and Floor prediction 
     profile['cap'] = profile.y.max() * 2
@@ -108,7 +122,7 @@ def forecast_profile(profile, target, periods=157, freq='W', plot=False):
     error_df = pd.merge(profile_err, err_forecast, on='ds')
     mape =  mean_absolute_percentage_error(error_df['y'], error_df['yhat'])
     
-    model = Prophet(growth='logistic', yearly_seasonality=20)
+    model = Prophet(growth='logistic', daily_seasonality=False, weekly_seasonality=False)
     model.fit(profile)
 
     future = model.make_future_dataframe(periods=periods, freq=freq)
@@ -118,10 +132,10 @@ def forecast_profile(profile, target, periods=157, freq='W', plot=False):
     # Predicting sales forecasts
     fcst = model.predict(future[future.ds > profile.ds.iloc[-1]])
     # Plot forecast
-    if plot:
-        fig = model.plot(fcst)
-        ax = fig.gca()
-        ax.set_title("{} => {}".format(target['Brand'], target['Category']))
+    # if plot:
+    #     fig = model.plot(fcst)
+    #     ax = fig.gca()
+    #     ax.set_title("{} => {}".format(target['Brand'], target['Category']))
         
     # dataset of columns ['ds', 'y'] to return, with correct historic values
     fcst = pd.concat([profile[['ds', 'y']], fcst[['ds', 'yhat']].rename(
@@ -162,6 +176,7 @@ def attack_new_markets(
         print(f"<attack_new_market> predict : {targets.get(key).get('Brand')} {targets.get(key).get('Category')}")
         target = targets.get(key).copy()
         category = target.get('Category')
+        
         p = {
                 'Category':le_cat.transform([category])[0],
                 'Sub Category':le_sub_cat.transform([target.get('Sub Category')])[0],
@@ -178,18 +193,25 @@ def attack_new_markets(
                 'std Price':(target.get('Price per volume')*1/100),
         }
 
+        print()
+        print(p)
+        print("\n\n\n")
+
         nb_samples_per_cat = len(df_sub_no_encoding[df_sub_no_encoding.Category == category])
         ten_per_cent = int(nb_samples_per_cat * 0.1)
-        k = ten_per_cent if ten_per_cent >= 100 else 100
+        k = ten_per_cent if ten_per_cent >= 100 else 10
         
-        p = pd.DataFrame(p, index=[0])   
-        neighbors = neigh.kneighbors(p, k, return_distance=False)
+        p = pd.DataFrame(p, index=[0]).fillna(0.0)
 
+        neighbors = neigh.kneighbors(p, k, return_distance=False)
+        print(neighbors)
+        #neighbors = random.choices(neighbors[0], k=80)
+        #p["Brand"] = b["Brand"]
         profile = build_profile(neighbors[0], df_sub, df, le_brand, le_cat, le_sub_cat)                         
         # Transform series to dataframe
         profile = profile.to_frame().reset_index().rename(columns={'Date': 'ds', 'Sales in volume': 'y'})
         # Forecast with profile
-        forecasts, mape = forecast_profile(profile, target, periods=periods, freq='W', plot=True)
+        forecasts, mape = forecast_profile(profile, target, periods=periods, freq='W', plot=False)
         
         targets[key]['3Y'] = forecasts[forecasts.ds > profile.ds.iloc[-1]].y.sum()
         targets[key]['mape'] = mape
@@ -258,11 +280,13 @@ def main(args) -> None:
     sales_pred.to_excel(f"view/{country}/{country}_pred_sales_{str(periods)}_weeks_{date.strftime('%d%m')}.xlsx")
     mape_pred.to_excel(f"view/{country}/{country}_pred_mape_{str(periods)}_weeks_{date.strftime('%d%m')}.xlsx")
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--country", type=str, help="Country")
     parser.add_argument("--channel", type=str, help="Channel")
     parser.add_argument("--periods", type=int, help="Num of Periods")
     args = parser.parse_args()
+    
+    start_time = time.time()
     main(args)
+    print("--- %s seconds ---" % (time.time() - start_time))
