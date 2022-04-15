@@ -107,7 +107,7 @@ def print_growth_drivers_past(args, dict_df_gd, dict_df_gd_scaled, folder):
             "\nPermutation Importance | Growth Drivers Past All years\n"
             "====================================================="
         )
-        print(dict_df_gd["all"]["xgb_feature_importance"])
+        print(dict_df_gd["all"]["rf_feature_importance"])
 
         print(
             "\nPermutation Importance | Growth Drivers Past All years rescaled \n"
@@ -116,16 +116,16 @@ def print_growth_drivers_past(args, dict_df_gd, dict_df_gd_scaled, folder):
         print(dict_df_gd_scaled["all"]["permutation_importance"])
 
         print(
-            "\nXGB Feature Importance | Growth Drivers Past All years\n"
+            "\nRF Feature Importance | Growth Drivers Past All years\n"
             "====================================================="
         )
         print(dict_df_gd["all"]["permutation_importance"])
 
         print(
-            "\nXGB Feature Importance | Growth Drivers Past All years rescaled \n"
+            "\nRF Feature Importance | Growth Drivers Past All years rescaled \n"
             "================================================================"
         )
-        print(dict_df_gd_scaled["all"]["xgb_feature_importance"])
+        print(dict_df_gd_scaled["all"]["rf_feature_importance"])
 
     if args.save_growth_drivers_past:
         fgd_path_to_create = os.path.join(
@@ -148,10 +148,10 @@ def print_growth_drivers_past(args, dict_df_gd, dict_df_gd_scaled, folder):
             fgd_path_to_create_cd, f"{args.country.lower()}_growth_drivers_past"
         )
 
-        for imp in ["permutation_importance", "xgb_feature_importance"]:
+        for imp in ["permutation_importance", "rf_feature_importance"]:
             for year in dict_df_gd:
                 print(f"\n    Saving growth drivers past {imp}...")
-                dict_df_gd[year][imp].round(1).to_excel(
+                dict_df_gd[year][imp].round(2).to_excel(
                     fgd_path + "_{}_{}.xlsx".format(imp, year)
                 )
 
@@ -159,7 +159,7 @@ def print_growth_drivers_past(args, dict_df_gd, dict_df_gd_scaled, folder):
                     f"\n    Saving growth drivers past rescaled controllable features {imp} ..."
                 )
 
-                dict_df_gd_scaled[year][imp].round(1).to_excel(
+                dict_df_gd_scaled[year][imp].round(2).to_excel(
                     fgd_path_cd + "_{}_{}_controllable_features.xlsx".format(imp, year)
                 )
 
@@ -181,11 +181,14 @@ def main(args):
 
         df_bel = pd.read_excel(args.path + "df_bel.xlsx")
         df_bel["Date"] = pd.to_datetime(df_bel.Date, format="%Y-%m-%d")
-
+        start_year_data = 2019
         last_year_data = 2021
-        if args.country == "KSA":
-            df = df[df.Date.dt.year <= last_year_data]
-            df_bel = df_bel[df_bel.Date.dt.year <= last_year_data]
+        # Exemple seen in "KSA" and "GB", only take data till 2021
+        # Delete first month of 2022 for the dataframe including it
+        df = df[df.Date.dt.year.isin(range(start_year_data, last_year_data + 1))]
+        df_bel = df_bel[
+            df_bel.Date.dt.year.isin(range(start_year_data, last_year_data + 1))
+        ]
 
         df["Date"] = df.Date.apply(lambda x: x.strftime("%Y-%m-%d"))
         df_bel["Date"] = df_bel.Date.apply(lambda x: x.strftime("%Y-%m-%d"))
@@ -281,19 +284,19 @@ def main(args):
 
         if args.verbose:
             print("\nCompute Trends\n==============")
+            print(df_trends)
             print_df_overview(df_trends)
 
         df_bel = df_bel.fillna(0)
         df_bel["Trends"] = df_bel.apply(
             lambda x: df_trends[df_trends.Date == x.Date][x.Brand].values[0], axis=1
         )
-        df_bel.fillna(0, inplace=True)
-        df_bel.head()
 
         if args.verbose:
             print("\nNew Bel\n=======")
             print_df_overview(df_bel)
 
+    df_bel.fillna(0, inplace=True)
     if args.forecast_categories:
         categories_name = list(df.Category.unique()) + ["TOTAL CHEESE"]
         df_fcst_categories, df_categories_mape_errors = forecast.forecasting_categories(
@@ -468,6 +471,12 @@ def main(args):
             )
 
     if args.scenarios:
+        priors_sigmas = {
+            "A&P": ("+", 0.6, 1.3),
+            "Price per volume": ("-", -0.3, 1.05),
+            "Distribution": ("+", 0.7, 1.3),
+            "Promo Cost": ("+", 0.5, 1.15),
+        }
 
         if args.cagr:
             # Can be any value
@@ -502,10 +511,13 @@ def main(args):
             ) = forecast.compute_scenarii(
                 df_bel,
                 dscenarii,
+                priors_sigmas=priors_sigmas,
+                model_name=args.smodel_name,
                 ntimes=3,
                 logistic=args.logistic,
                 add_market=True,
                 add_competition=False,
+                adstock=args.adstock,
             )
 
             if args.verbose:
@@ -542,10 +554,13 @@ def main(args):
             ) = forecast.compute_scenarii(
                 df_bel,
                 dscenarii,
+                priors_sigmas=priors_sigmas,
+                model_name=args.smodel_name,
                 ntimes=3,
                 logistic=args.logistic,
                 add_market=False,
                 add_competition=True,
+                adstock=args.adstock,
             )
 
             if args.verbose:
@@ -585,10 +600,13 @@ def main(args):
             ) = forecast.compute_scenarii(
                 df_bel,
                 dscenarii,
+                priors_sigmas=priors_sigmas,
+                model_name=args.smodel_name,
                 ntimes=3,
                 logistic=args.logistic,
                 add_market=False,
-                add_competition=True,
+                add_competition=False,
+                adstock=args.adstock,
             )
 
             if args.verbose:
@@ -732,6 +750,13 @@ if __name__ == "__main__":
         "--scenarios", help="Compute giving scenarios", action="store_true"
     )
     parser.add_argument(
+        "--smodel_name",
+        "-smn",
+        type=str,
+        default="orbit",
+        help="Model to use for scenarios computation",
+    )
+    parser.add_argument(
         "--cagr", help="Transform given scenarios to cagr values", action="store_true"
     )
     parser.add_argument(
@@ -740,7 +765,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-saap",
         "--scenario-a-and-p",
-        type=int,
+        type=float,
         nargs="+",
         default=[-5, -2, 0, 2, 5],
         help="Scenarios for A&P",
@@ -748,7 +773,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-sppv",
         "--scenario-price-per-volume",
-        type=int,
+        type=float,
         nargs="+",
         default=[0, 1, 3, 5, 7],
         help="Scenarios for Price per volume",
@@ -756,7 +781,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-spc",
         "--scenario-promo-cost",
-        type=int,
+        type=float,
         nargs="+",
         default=[-6, -3, 0, 3, 10],
         help="Scenarios for promo cost",
@@ -764,10 +789,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "-sdist",
         "--scenario-distribution",
-        type=int,
+        type=float,
         nargs="+",
         default=[-10, -5, 0, 5, 10],
         help="Scenarios for Distribution",
+    )
+    parser.add_argument(
+        "--adstock", help="Use adstock on features, eg: A&P", action="store_true"
     )
     parser.add_argument("--geo", type=str, help="Geo for computing trends")
     parser.add_argument(

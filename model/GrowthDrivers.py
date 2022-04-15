@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.inspection import permutation_importance
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
 from tqdm import tqdm
 from xgboost import XGBRegressor
 
@@ -22,7 +24,7 @@ class GrowthDrivers:
         add_market=False,
         add_competition=False,
     ):
-        dict_res = {"xgb_feature_importance": {}, "permutation_importance": {}}
+        dict_res = {"rf_feature_importance": {}, "permutation_importance": {}}
         competition_feats_cat = ["Competition price", "Competition sales"]
         compet_feats, ordered_drivers = [], []
         for brand in tqdm(brands_name, ascii=True, desc="Brands"):
@@ -61,20 +63,23 @@ class GrowthDrivers:
             X_train, X_test, y_train, y_test = train_test_split(
                 X, y, test_size=0.05, random_state=42
             )
-            xgb_model = XGBRegressor()
-            xgb_model.fit(X_train, y_train)
 
-            # XGB Feature importance
-            feature_importances = xgb_model.feature_importances_
+            rf_model = RandomForestRegressor()
+            min_max_scaler = MinMaxScaler()
+            X_train_scaled = min_max_scaler.fit_transform(X_train)
+            rf_model.fit(X_train_scaled, y_train)
+
+            # RF Feature importance
+            feature_importances = rf_model.feature_importances_
             sorted_idx_feat_imp = feature_importances.argsort()
 
             # Doing permutation importance on Train set
             perm_importance = permutation_importance(
-                xgb_model, X_train, y_train, n_repeats=30
+                rf_model, X_train_scaled, y_train, n_repeats=30
             )
             sorted_idx_perm_imp = perm_importance.importances_mean.argsort()
             for idx_fi, idx_pi in zip(sorted_idx_feat_imp, sorted_idx_perm_imp):
-                dict_res["xgb_feature_importance"][brand][df_tmp_X.columns[idx_fi]] = (
+                dict_res["rf_feature_importance"][brand][df_tmp_X.columns[idx_fi]] = (
                     feature_importances[idx_fi] * 100
                 )
                 dict_res["permutation_importance"][brand][
@@ -90,7 +95,7 @@ class GrowthDrivers:
                 set(
                     [
                         elem
-                        for brand in dict_res["xgb_feature_importance"]
+                        for brand in dict_res["rf_feature_importance"]
                         for elem in brands_markets[brand]
                     ]
                 )
@@ -206,7 +211,11 @@ class GrowthDrivers:
                 # Convert first dict_df_gd to dataframes
                 dict_df_gd[year][imp] = pd.DataFrame(dict_df_gd[year][imp])
                 # For Permutation importance specifically, replace negative values by 0
-                dict_df_gd[year][imp][dict_df_gd[year][imp] < 0] = 0
+                if imp == "permutation_importance":
+                    dict_df_gd[year][imp][dict_df_gd[year][imp] < 0] = 0
+                    dict_df_gd[year][imp] = dict_df_gd[year][imp].apply(
+                        lambda x: (x * 100) / x.sum()
+                    )
 
                 # Rescale the controllable_features to 100
                 dict_df_gd_scaled[year][imp] = (
