@@ -8,12 +8,12 @@ python main.py \
        --periods 36 \
        --geo $geo \
        --compute-trends \
-       --competition \
-       --scenarios --cagr -ss \
-       -saap -20 -10 -5 0 5 10 20 30 \
-       -sppv -5 0 5 10 15 \
-       -spc  -10 -5 0 5 10 \
-       -sdist -10 -5 0 5 10 \
+       --logistic \
+       --scenarios --cagr -smn "orbit" \
+       -saap 0 10 20 \
+       -sppv -5 0 5 10 \
+       -spc  -5 0 5 10 \
+       -sdist 0 5 10 20 \
        --verbose
 
 # --logistic \

@@ -4,9 +4,13 @@ from itertools import product
 
 import matplotlib.pyplot as plt
 import numpy as np
+import orbit
 import pandas as pd
 from fbprophet import Prophet
+from orbit.models import DLT
+from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
+from utils.adstock import run_adstock_loop
 from utils.tools import cagr, mean_absolute_percentage_error, print_df_overview
 
 
@@ -436,6 +440,7 @@ class Forecast:
 
         # Start generating one year by weeks, and remove the first cause exists in bel
         periods = 13 if self.freq == "M" else 53
+        # periods = 156
         df_bel_future = (
             pd.date_range(start=df_bel.Date.iloc[-1], periods=periods, freq=self.freq)[
                 1:
@@ -445,10 +450,21 @@ class Forecast:
             .rename(columns={0: "Date"})
         )
 
+        # for k, v in zip(features, scenario):
+        #     df_bel_future[k] = (df_bel[k] + (df_bel[k] * v / 100)).values
+
         for k, v in zip(features, scenario):
             df_bel_last_year = df_bel[df_bel.Date.dt.year == last_year]
-            init_state = df_bel_last_year[k].mean()
-            df_bel_future[k] = init_state + (init_state * v / 100)
+
+            if k in ["Price per volume", "Distribution"]:
+                init_state = df_bel_last_year[k].iloc[-1]
+                df_bel_future[k] = np.linspace(
+                    init_state, init_state + (init_state * v / 100), periods - 1
+                )
+            else:
+                df_bel_future[k] = (
+                    df_bel_last_year[k] + df_bel_last_year[k] * v / 100
+                ).values
 
         return df_bel_future
 
@@ -456,10 +472,13 @@ class Forecast:
         self,
         df,
         dscenarii,
+        priors_sigmas,
+        model_name="orbit",
         ntimes=3,
         logistic=False,
         add_market=False,
         add_competition=False,
+        adstock=False,
     ):
         """
 
@@ -472,6 +491,13 @@ class Forecast:
 
         """
 
+        # Adstock initialization
+        L, P, D = np.arange(2, 5), np.arange(2, 5), np.arange(1, 4)
+        adstock_features = ["A&P"]
+        adstock_params = {}
+        for feat in adstock_features:
+            adstock_params[feat] = {"L": L, "P": P, "D": D}
+
         df["Date"] = pd.to_datetime(df.Date, format="%Y-%m-%d")
         df.fillna(0, inplace=True)
 
@@ -483,21 +509,26 @@ class Forecast:
         features = list(dscenarii.keys())
 
         last_year = df.Date.iloc[-1].year
+        last_years = df.Date.dt.year.apply(str).unique().tolist()
         percent_columns_names = ["% " + k for k in features]
         results_columns_name = (
             ["ds"] + percent_columns_names + features + ["Sales in volume"]
         )
         years = ["2022", "2023", "2024"]
 
-        gen_features_name = lambda k: [k + y for y in [str(last_year)] + years]
-        resumed_results_columns_name = percent_columns_names + [
-            *gen_features_name("A&P "),
-            *gen_features_name("Price "),
-            *gen_features_name("Promo "),
-            *gen_features_name("Distrib "),
-            *gen_features_name("Sales volume "),
-            "3Y forecasts sales",
-        ]
+        gen_features_name = lambda k: [k + y for y in last_years + years]
+        resumed_results_columns_name = (
+            percent_columns_names
+            + [
+                elem
+                for subset in [
+                    gen_features_name(f"{feat} ")
+                    for feat in features + ["Sales volume"]
+                ]
+                for elem in subset
+            ]
+            + ["3Y forecasts sales"]
+        )
 
         df_total_results = pd.DataFrame(columns=["Brand"] + results_columns_name)
         df_total_resumed_results = pd.DataFrame(
@@ -522,62 +553,129 @@ class Forecast:
             )
             df = pd.merge(df, df_markets_or_compet, on="Date")
 
-        pbar = tqdm(brands_name, ascii=True)
+        # pbar = tqdm(list(set(brands_name) - set(["NURISHH"])), ascii=True)
+        # pbar = tqdm(brands_name, ascii=True)
+        pbar = tqdm(["BOURSIN"], ascii=True)
         for brand in pbar:
+            all_features = features + brands_cat[brand]
             pbar.set_description(f"Brands|{brand}")
-
+            print(
+                "\nFeatures taking into account for this brand scenario computation...\n"
+                "====================================================================\n",
+                all_features,
+            )
             # Results with all the forecasts
+
             df_results = pd.DataFrame(columns=results_columns_name)
             list_results = [df_results]
+
             # Resumed results, raw of scenario and sum of future forecasts
             df_resumed_results = pd.DataFrame(columns=resumed_results_columns_name)
             list_resumed_results = [df_resumed_results]
 
-            # Selecting Date, and features such as "A&P, Promo, Price, Distrib"
-            #  and markets or compet, plus Sales in volume
-
             df_bel_brand = df[df.Brand == brand]
-            df_prophet = (
-                df_bel_brand[features + brands_cat[brand] + ["Date", "Sales in volume"]]
+            df_fcst = (
+                df_bel_brand[all_features + ["Date", "Sales in volume"]]
                 .rename(columns={"Date": "ds", "Sales in volume": "y"})
                 .copy()
             )
 
-            df_prophet["cap"] = df_prophet.y.max() * 5
-            df_prophet["floor"] = df_prophet.y.min() / 3
+            df_fcst_std = pd.DataFrame()
+            if model_name == "orbit":
+                if logistic:
+                    # model = DLT(
+                    #     response_col="y",
+                    #     date_col="ds",
+                    #     regressor_col=all_features,
+                    #     regressor_sign=[priors_sigmas[feat][0] for feat in features]
+                    #     + ["="] * len(brands_cat[brand]),
+                    #     regressor_beta_prior=[
+                    #         priors_sigmas[feat][1] for feat in features
+                    #     ]
+                    #     + [0.25] * len(brands_cat[brand]),
+                    #     regressor_sigma_prior=[
+                    #         priors_sigmas[feat][2] for feat in features
+                    #     ]
+                    #     + [1] * len(brands_cat[brand]),
+                    #     global_trend_option="logistic",
+                    #     estimator="stan-mcmc",
+                    #     seasonality=52,
+                    #     num_warmup=1000,
+                    #     num_sample=1000,
+                    #     seed=2022,
+                    # )
+                    model = DLT(
+                        response_col="y",
+                        date_col="ds",
+                        regressor_col=all_features,
+                        global_trend_option="logistic",
+                        estimator="stan-mcmc",
+                        seasonality=52,
+                        num_warmup=1000,
+                        seed=1000,
+                    )
+                else:
+                    # model = DLT(
+                    #     response_col="y",
+                    #     date_col="ds",
+                    #     regressor_col=all_features,
+                    #     regressor_sign=[priors_sigmas[feat][0] for feat in features]
+                    #     + ["="] * len(brands_cat[brand]),
+                    #     estimator="stan-mcmc",
+                    #     seasonality=52,
+                    #     num_warmup=1000,
+                    #     num_sample=1000,
+                    #     seed=2022,
+                    # )
+                    model = DLT(
+                        response_col="y",
+                        date_col="ds",
+                        regressor_col=all_features,
+                        num_warmup=1000,
+                        seed=1000,
+                    )
 
-            # A model for each brand
-            if logistic:
-                model = Prophet(
-                    growth="logistic", daily_seasonality=False, weekly_seasonality=False
-                )
             else:
-                model = Prophet(
-                    growth="linear", daily_seasonality=False, weekly_seasonality=False
-                )
+                # Prophet
+                # A model for each brand
+                df_fcst_std["cap"] = df_fcst.y.max() * 5
+                df_fcst_std["floor"] = df_fcst.y.min() / 3
 
-            for feature in features + brands_cat[brand]:
-                model.add_regressor(feature)
+                if logistic:
+                    model = Prophet(
+                        growth="logistic",
+                        daily_seasonality=False,
+                        weekly_seasonality=False,
+                    )
+                else:
+                    model = Prophet(
+                        growth="linear",
+                        daily_seasonality=False,
+                        weekly_seasonality=False,
+                    )
+
+                for feature in all_features:
+                    model.add_regressor(feature)
 
             # Fitting model
-            model.fit(df_prophet)
+            df_fcst = df_fcst.sort_values(by="ds")
+            df_fcst = df_fcst.drop_duplicates()
+            df_fcst = df_fcst.reset_index(drop=True)
 
-            # Replace Promo Cost per the right formula
-            df_bel_brand_last_year = df_bel_brand[df_bel_brand.Date.dt.year == 2021]
-            df_bel_brand["Promo Cost"] = (
-                df_bel_brand_last_year["Sales volume with promo"].sum()
-                / df_bel_brand_last_year["Sales in volume"].sum()
-            )
-            df_bel_brand["A&P"] = df_bel_brand_last_year["A&P"].sum() / len(
-                df_bel_brand_last_year
-            )
-            df_bel_brand["Price per volume"] = df_bel_brand_last_year[
-                "Price per volume"
-            ].median()
-            df_bel_brand["Distribution"] = df_bel_brand_last_year[
-                "Distribution"
-            ].median()
+            # Adstock
+            df_fcst.loc[:, adstock_features] = run_adstock_loop(
+                df_fcst, adstock_features, "y", adstock_params
+            )[adstock_features]
 
+            # Apply standard scaler to features
+            model_std = StandardScaler()
+            df_fcst_std.loc[:, ["ds", "y"]] = df_fcst[["ds", "y"]]
+            df_fcst_std.loc[:, all_features] = model_std.fit_transform(
+                df_fcst[all_features]
+            )
+
+            model.fit(df_fcst_std)
+            # print(model.get_regression_coefs())
             last_year_sales = df_bel_brand[
                 df_bel_brand.Date.dt.year == df_bel_brand.Date.iloc[-1].year
             ]["Sales in volume"].sum()
@@ -592,6 +690,7 @@ class Forecast:
 
             for scenario in tqdm(scenarii, ascii=True, desc="Scenarios"):
                 # Loop for generalising number of years, or any periods
+                # df[df.Brand == brand]
                 df_scenario = self.create_scenario_data_per_year(
                     df_bel_brand, features, scenario
                 )
@@ -605,99 +704,73 @@ class Forecast:
                 if add_market or add_competition:
                     df_scenario = pd.merge(df_features, df_scenario, on="Date")
 
-                # Predicting model on a scenario
-                df_scenario["cap"] = df_prophet["cap"].iloc[0]
-                df_scenario["floor"] = df_prophet["floor"].iloc[0]
-
                 # Renaming Date to ds
                 df_scenario = df_scenario.rename(columns={"Date": "ds"})
 
-                fcst = model.predict(df_scenario)
-                fcst["yhat"] = fcst.yhat.apply(lambda x: 0 if x < 0 else x)
+                # print("\n DataFrame Scenario\n=====================")
+                # print_df_overview(df_scenario)
+                df_scenario_std = pd.DataFrame()
+                df_scenario_std["ds"] = df_scenario["ds"]
+                df_scenario_std.loc[:, all_features] = model_std.transform(
+                    df_scenario[all_features]
+                )
+
+                if model_name == "orbit":
+                    fcst = model.predict(df_scenario_std)
+                    fcst = fcst.rename(columns={"prediction": "yhat"})
+                else:
+                    # Prophet
+                    # Predicting model on a scenario
+                    df_scenario_std["cap"] = df_fcst_std["cap"].iloc[0]
+                    df_scenario_std["floor"] = df_fcst_std["floor"].iloc[0]
+
+                    fcst = model.predict(df_scenario_std)
+                    fcst["yhat"] = fcst.yhat.apply(lambda x: 0 if x < 0 else x)
+
                 df_scenario["Sales in volume"] = fcst["yhat"]
 
                 for k, v in zip(features, scenario):
                     df_scenario["% " + k] = v
 
+                # Lambda functions
                 gen_resumed_results = lambda df, feature, years, method: [
                     df[df.ds.dt.year == int(y)].describe()[feature][method]
                     for y in years
                 ]
+                gen_sum = lambda df, feature, years: [
+                    df[df.ds.dt.year == int(y)][feature].sum() for y in years
+                ]
+                gen_last = lambda df, feature, years: [
+                    df[df.ds.dt.year == int(y)][feature].iloc[-1] for y in years
+                ]
 
                 df_bb = df_bel_brand.rename(columns={"Date": "ds"})
-                # print("\n DataFrame Scenario\n=====================")
-                # print_df_overview(df_scenario)
-                # print_df_overview(df_scenario[results_columns_name])
-                # print(
-                #     pd.DataFrame(
-                #         [
-                #             list(scenario)
-                #             + gen_resumed_results(df_bb, "A&P", [last_year], "mean")
-                #             + gen_resumed_results(df_scenario, "A&P", years, "mean")
-                #             + gen_resumed_results(
-                #                 df_bb, "Price per volume", [last_year], "mean"
-                #             )
-                #             + gen_resumed_results(
-                #                 df_scenario, "Price per volume", years, "mean"
-                #             )
-                #             + gen_resumed_results(
-                #                 df_bb, "Promo Cost", [last_year], "mean"
-                #             )
-                #             + gen_resumed_results(
-                #                 df_scenario, "Promo Cost", years, "mean"
-                #             )
-                #             + gen_resumed_results(
-                #                 df_bb, "Distribution", [last_year], "mean"
-                #             )
-                #             + gen_resumed_results(
-                #                 df_scenario, "Distribution", years, "mean"
-                #             )
-                #             + [last_year_sales]
-                #             + [
-                #                 fcst[fcst.ds.dt.year == int(y)]["yhat"].sum()
-                #                 for y in years
-                #             ]
-                #             + [df_scenario["Sales in volume"].sum()]
-                #         ],
-                #         columns=resumed_results_columns_name,
-                #     )
-                # )
-
-                list_results.append(df_scenario[results_columns_name])
-                list_resumed_results.append(
-                    pd.DataFrame(
-                        [
-                            list(scenario)
-                            + gen_resumed_results(df_bb, "A&P", [last_year], "mean")
-                            + gen_resumed_results(df_scenario, "A&P", years, "mean")
-                            + gen_resumed_results(
-                                df_bb, "Price per volume", [last_year], "mean"
-                            )
-                            + gen_resumed_results(
-                                df_scenario, "Price per volume", years, "mean"
-                            )
-                            + gen_resumed_results(
-                                df_bb, "Promo Cost", [last_year], "mean"
-                            )
-                            + gen_resumed_results(
-                                df_scenario, "Promo Cost", years, "mean"
-                            )
-                            + gen_resumed_results(
-                                df_bb, "Distribution", [last_year], "mean"
-                            )
-                            + gen_resumed_results(
-                                df_scenario, "Distribution", years, "mean"
-                            )
-                            + [last_year_sales]
-                            + [
-                                fcst[fcst.ds.dt.year == int(y)]["yhat"].sum()
-                                for y in years
+                df_to_add = pd.DataFrame(
+                    [
+                        list(scenario)
+                        + [
+                            elem
+                            for subset in [
+                                gen_sum(df_bb, feat, last_years)
+                                + gen_sum(df_scenario, feat, years)
+                                if feat in ["A&P", "Promo Cost"]
+                                else gen_last(df_bb, feat, last_years)
+                                + gen_last(df_scenario, feat, years)
+                                for feat in features
                             ]
-                            + [df_scenario["Sales in volume"].sum()]
-                        ],
-                        columns=resumed_results_columns_name,
-                    )
+                            for elem in subset
+                        ]
+                        + gen_sum(df_bb, "Sales in volume", last_years)
+                        + gen_sum(fcst, "yhat", years)
+                        + [df_scenario["Sales in volume"].sum()]
+                    ],
+                    columns=resumed_results_columns_name,
                 )
+                list_results.append(df_scenario[results_columns_name])
+                list_resumed_results.append(df_to_add)
+
+                # print_df_overview(df_scenario[results_columns_name])
+                # print(df_to_add)
 
             df_results = pd.concat(list_results, ignore_index=True)
             df_resumed_results = pd.concat(list_resumed_results, ignore_index=True)
