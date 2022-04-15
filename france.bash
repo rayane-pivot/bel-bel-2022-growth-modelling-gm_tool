@@ -5,17 +5,17 @@ geo="FR"
 
 python main.py \
        --country $country \
-       --path "/Users/augustecousin/Documents/bel_gm_tool/gm_tool/view/data/${country}/${1}/" \
+       --path "/Users/ahmed/Projects/gm_tool/data/${country}/${1}/" \
        --weeks \
        --periods 157 \
        --geo $geo \
-       --logistic \
        --compute-trends \
-       --scenarios -ss \
-       -saap -5 -2 0 2 5 \
-       -sppv 0 1 3 5 7 \
-       -spc  -6 -3 0 3 10 \
-       -sdist  -10 -5 0 5 10 \
+       --competition \
+       --scenarios -ss -smn "prophet" \
+       -saap -2 0 2 5 10 \
+       -sppv 10 11 15 \
+       -spc  0 3 7 10 \
+       -sdist  0 \
        --verbose
 
 # -gdp 'Date' 'Brand' 'A&P' 'Price per volume' 'Rate of Innovation' 'Promo Cost' 'Distribution' 'Trends' 'Sales in volume' \
