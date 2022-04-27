@@ -38,23 +38,27 @@ class DM_CAN(DataManager):
             try:
                 df_concat = pd.concat([df_concat, df_dates])
             except Exception:
-                print(i)
-                print(group.shape)
                 k=k+1
                 continue
-        print(k)
-        print(df_concat.columns)
         cat_names = json_sell_out_params.get(self._country).get("sales_renaming_columns_dict").get("CATEGORICALS")
         kpi_names = json_sell_out_params.get(self._country).get("sales_renaming_columns_dict").get("KPIS")
         
         df_concat = df_concat.rename(columns=dict(cat_names, **kpi_names))
-        print(df_concat.columns)
         df_concat = df_concat.reset_index(drop=True)
 
         sales_date_format=json_sell_out_params.get(self._country).get("sales_date_format")
         date_format = json_sell_out_params.get(self._country).get("date_format")
         df_concat.Date = df_concat.Date.apply(lambda x:dt.datetime.strptime(''.join(x.strip()[3:]), sales_date_format).strftime(date_format))
-        
+
+        ###FILTER FOR PLATTER AND SPECIALTY ONLY
+        # df_concat = df_concat[df_concat['Category'].isin(['PLATTER', 'SPECIALTY'])]
+        # df_concat.loc[df_concat[df_concat['Category'] == 'PLATTER'].index, 'Category'] = df_concat.loc[df_concat[df_concat['Category'] == 'PLATTER'].index, 'Sub Category']
+        # df_concat.loc[df_concat[df_concat['Category'] == 'SPECIALTY'].index, 'Category'] = df_concat.loc[df_concat[df_concat['Category'] == 'SPECIALTY'].index, 'Sub Category']
+
+        ###FILTER FOR PLATTER ONLY
+        #df_concat = df_concat[df_concat['Category'] == 'PLATTER']
+        #df_concat.loc[df_concat[df_concat['Category'] == 'PLATTER'].index, 'Category'] = df_concat.loc[df_concat[df_concat['Category'] == 'PLATTER'].index, 'Sub Category']
+        #df_concat.loc[df_concat[df_concat['Category'] == 'SPECIALTY'].index, 'Category'] = df_concat.loc[df_concat[df_concat['Category'] == 'SPECIALTY'].index, 'Sub Category']
         self._df = df_concat
 
 
@@ -169,7 +173,6 @@ class DM_CAN(DataManager):
         date_max = (
             json_sell_out_params.get(self._country).get("dates_finance").get("Max")
         )
-        print("DATES FINANCES HERE", date_min, date_max)
         aandp_codes = json_sell_out_params.get(self._country).get("A&P_codes")
         finance_codes_to_brands = json_sell_out_params.get(self._country).get("Finance").get("finance_codes_to_brands")
         # Filter brands for the study

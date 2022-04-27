@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import datetime as dt
+import functools
 from dateutil.relativedelta import *
 
 from datamanager.DataManager import DataManager
@@ -12,6 +13,7 @@ class DM_BEL(DataManager):
 
     def ad_hoc_BEL(self, json_sell_out_params):
         path = json_sell_out_params.get("BEL").get("dict_path").get("PATH_SALES").get("Total Country")
+        print(f"<compute_Sales> open file {path}")
         df = pd.read_excel(path, header=[3, 4], sheet_name="WSP_Sheet1")
         
         index_features = [
@@ -80,26 +82,38 @@ class DM_BEL(DataManager):
         df = self._df.copy()
         # df.Date = pd.to_datetime(df.Date).dt.strftime("%Y-%m-%d")
         bel_brands = json_sell_out_params.get(self._country).get("bel_brands")
+        # df_bel = (
+        #     df[df.Brand.isin(bel_brands)]
+        #     .groupby(["Date", "Brand"], as_index=False)[
+        #         [
+        #             "Price per volume",
+        #             "Sales in volume",
+        #             "Sales in value",
+        #             "Distribution",
+        #             "Sales volume with promo",
+        #         ]
+        #     ]
+        #     .agg(
+        #         {
+        #             "Price per volume": "mean",
+        #             "Sales in volume": "sum",
+        #             "Sales in value": "sum",
+        #             "Distribution": "mean",
+        #             "Sales volume with promo":"sum",
+        #         }
+        #     )
+        # )
         df_bel = (
-            df[df.Brand.isin(bel_brands)]
-            .groupby(["Date", "Brand"], as_index=False)[
-                [
-                    "Price per volume",
-                    "Sales in volume",
-                    "Sales in value",
-                    "Distribution",
-                    "Sales volume with promo",
-                ]
-            ]
-            .agg(
-                {
-                    "Price per volume": "mean",
-                    "Sales in volume": "sum",
-                    "Sales in value": "sum",
-                    "Distribution": "mean",
-                    "Sales volume with promo":"sum",
-                }
-            )
+            df
+            [df.Brand.isin(bel_brands)]
+            .groupby(["Date", "Brand"], as_index=False)
+            .apply(lambda group: pd.Series({
+                    "Price per volume": (group["Price per volume"] * group["Sales in volume"]).sum()/group["Sales in volume"].sum(),
+                    "Sales in volume": group["Sales in volume"].sum(),
+                    "Sales in value": group["Sales in value"].sum(),
+                    "Sales volume with promo":group["Sales volume with promo"].sum(),
+                    "Distribution": (group["Distribution"] * group["Sales in volume"]).sum()/group["Sales in volume"].sum(),
+            }))
         )
         
         df_bel["Promo Cost"] = df_bel["Sales volume with promo"] / df_bel["Sales in volume"]
@@ -174,13 +188,13 @@ class DM_BEL(DataManager):
 
 
     def compute_inno(self, json_sell_out_params):
-        import functools
         def compose2(f, g):
             return lambda *a, **kw: g(f(*a, **kw))
         def compose(*fs):
             return functools.reduce(compose2, fs)
 
         path = json_sell_out_params.get(self._country).get("dict_path").get("PATH_INNO").get("Total Country")
+        print(f"<compute_Inno> open file {path}")
         df = pd.read_excel(path, header=[3, 4], sheet_name="WSP_Sheet3")
         df_inno = (
             df
@@ -212,7 +226,7 @@ class DM_BEL(DataManager):
         def sum_ap(r):
             r["A&P"] = r[["Advertising", "Promotion"]].sum(axis=1, skipna=True)
             return r
-
+        date_index = pd.date_range(start='2018-01-01', end='2022-01-01', freq='W-Sun')
         df_finance = (
             df
             # Filter country
@@ -221,17 +235,19 @@ class DM_BEL(DataManager):
             .assign(Brand = lambda x: x["CODE EPM"].map(code_brands, na_action='ignore'))
             # Group by date brands in case multiple entree for one date brand
             .groupby(["Brand", "YEAR EPM"]).agg(sum).reset_index()
-            .assign(MVC = lambda x: abs(x["MVC - Margin on variable costs"]))
-            .assign(Advertising = lambda x: abs(x["R4100 - ADVERTISING"]))
-            .assign(Promotion = lambda x: abs(x["R4200 - PROMOTION - CONSUMERS"]))
+            .assign(MVC = lambda x: abs(x["MVC - Margin on variable costs"]) * 1_000)
+            .assign(Advertising = lambda x: abs(x["R4100 - ADVERTISING"]) * 1_000)
+            .assign(Promotion = lambda x: abs(x["R4200 - PROMOTION - CONSUMERS"]) * 1_000)
             .assign(Date = lambda x: pd.to_datetime(x["YEAR EPM"].str.rsplit(pat="-", expand=True)[0], format="%Y.%m "))
             # Keep columns of interest
             [["Date", "Brand", "MVC", "Advertising", "Promotion"]]
-            # Resample Dates with value copy
+            # Resample Dates from Monthly to Weekly with first value copy
             .groupby('Brand', as_index=False)
             .apply(lambda x:
-                x.set_index('Date').resample('W').ffill()
+                # x.set_index('Date').resample('W', closed="left").ffill()
+                x.set_index('Date').reindex(date_index, method="ffill")
             ).reset_index()
+            .assign(Date = lambda x: x["level_1"])
             # Divide by number of weeks
             .groupby(["Brand", pd.Grouper(key="Date", freq="M")])
             .apply(lambda x:x.assign(
@@ -244,7 +260,7 @@ class DM_BEL(DataManager):
             # Add A&P column
             .pipe(sum_ap)
             # Clean columns
-            .drop(columns=["level_0"])
+            .drop(columns=["level_0", "level_1"])
         )
         return df_finance
 

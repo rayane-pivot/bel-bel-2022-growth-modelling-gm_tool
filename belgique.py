@@ -20,8 +20,8 @@ def main() -> None:
     data_manager.ad_hoc_BEL(json_sell_out_params=json_sell_out_params)
     data_manager.fill_df_bel(json_sell_out_params=json_sell_out_params)
 
-    data_manager.get_df().to_excel(f"view/BEL/{country}_df_{date.strftime('%d%m')}.xlsx", index=False)
-    data_manager.get_df_bel().to_excel(f"view/BEL/{country}_df_bel_{date.strftime('%d%m')}.xlsx", index=False)
+    # data_manager.get_df().to_excel(f"view/BEL/{country}_df_{date.strftime('%d%m')}.xlsx", index=False)
+    # data_manager.get_df_bel().to_excel(f"view/BEL/{country}_df_bel_{date.strftime('%d%m')}.xlsx", index=False)
 
     model = Model()
 
@@ -41,31 +41,31 @@ def main() -> None:
     brand_positioning_matrix = model.compute_brand_positioning_matrix(
         data_manager.get_df(), year_min=year_min, year1=year1, year2=year2
     )
-    brand_positioning_matrix.to_excel(f"view/BEL/{country}_brand_positioning_matrix_{date.strftime('%d%m')}.xlsx")
+    # brand_positioning_matrix.to_excel(f"view/BEL/{country}_brand_positioning_matrix_{date.strftime('%d%m')}.xlsx")
 
-    # attack_init_state = model.compute_attack_init_state(
-    #     df=data_manager.get_df(),
-    #     df_bel=data_manager.get_df_bel(),
-    #     json_sell_out_params=json_sell_out_params,
-    #     country=country,
-    #     )
+    attack_init_state = model.compute_attack_init_state(
+        df=data_manager.get_df(),
+        df_bel=data_manager.get_df_bel(),
+        json_sell_out_params=json_sell_out_params,
+        country=country,
+        )
 
-    # attack_init_state.to_excel(
-    #     f"view/{country}/{country}_attack_init_state_{date.strftime('%d%m')}.xlsx", index=False
-    # )
+    attack_init_state.to_excel(
+        f"view/{country}/{country}_attack_init_state_{date.strftime('%d%m')}.xlsx", index=False
+    )
     
-    # capacity_to_win = Capacity_To_Win()
-    # (
-    #     df_brand_scaled,
-    #     df_category_scaled,
-    #     df_market_brand_scaled,
-    #     capacity_to_win,
-    # ) = capacity_to_win.compute_Capacity_to_Win(
-    #     df=data_manager.get_df(),
-    #     df_bel=data_manager.get_df_bel(),
-    #     json_sell_out_params=json_sell_out_params,
-    #     country=country,
-    # )
+    capacity_to_win = Capacity_To_Win()
+    (
+        df_brand_scaled,
+        df_category_scaled,
+        df_market_brand_scaled,
+        capacity_to_win,
+    ) = capacity_to_win.compute_Capacity_to_Win(
+        df=data_manager.get_df(),
+        df_bel=data_manager.get_df_bel(),
+        json_sell_out_params=json_sell_out_params,
+        country=country,
+    )
 
     # with pd.ExcelWriter(f"view/{country}/capacity_to_win_{date.strftime('%d%m')}.xlsx") as writer:
     #     df_brand_scaled.to_excel(writer, sheet_name='Brand_Score')

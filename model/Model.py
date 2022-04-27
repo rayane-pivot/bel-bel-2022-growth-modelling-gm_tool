@@ -52,7 +52,9 @@ class Model:
 
         ###Price
         df_grp = (
-            df.groupby([on, pd.Grouper(key="Date", freq="Y")])["Price per volume"]
+            df
+            [pd.to_numeric(df['Price per volume'], errors='coerce').notnull()]
+            .groupby([on, pd.Grouper(key="Date", freq="Y")])["Price per volume"]
             .agg(["mean", "median"])
             .reset_index()
         )

@@ -18,6 +18,7 @@ warnings.simplefilter(action='ignore', category=SettingWithCopyWarning)
 
 def build_train_set(df):
     df_temp = df.copy()
+    df_temp = df_temp[pd.to_numeric(df_temp['Price per volume'], errors='coerce').notnull()]
     df_temp = df_temp[["Category", "Sub Category", "Brand", "Distribution", "Price per volume", "Sales in volume"]]
 
     df_n_cat = df_temp.groupby(['Brand'])['Category'].agg(Number_of_Categories = "nunique").reset_index().rename(columns={'Number_of_Categories':'Number of Categories'})
@@ -57,8 +58,8 @@ def generate_targets(data_manager:DataManager, channel:str=None) -> dict:
         df_bel = data_manager.get_df_bel()
     
     print(f"<generate_targets> generating {df.Category.nunique() * df_bel.Brand.nunique() = } targets")
-    bel_brands = np.append(["BOURSIN"], df_bel.Brand.unique())
-    print(bel_brands)
+    #bel_brands = np.append(["BOURSIN"], df_bel.Brand.unique())
+    bel_brands = df_bel.Brand.unique()
     for category in df.Category.unique():
         #for brand in df_bel.Brand.unique():
         for brand in bel_brands:
@@ -66,15 +67,15 @@ def generate_targets(data_manager:DataManager, channel:str=None) -> dict:
             n_sub_categories = df[df.Brand==brand]["Sub Category"].nunique()
             sub_cat = df[df.Category==category].groupby('Sub Category')['Sales in volume'].agg('sum').sort_values(ascending=False).index[0]
             distribution = df[df.Category==category].Distribution.mean()
-            price = df[df.Category==category]['Price per volume'].mean()
-            
+            price = df[pd.to_numeric(df['Price per volume'], errors='coerce').notnull()][df.Category==category]['Price per volume'].agg("mean")
+
             own_distribution = df[df.Brand==brand].Distribution.mean()
-            own_price = df[df.Brand==brand]['Price per volume'].mean()
+            own_price = df[df.Brand==brand]['Price per volume'].agg("mean")
 
             if 'Price without promo' in df.columns:
                 price_no_promo = df[df.Category==category]['Price without promo'].median()
             else :
-                price_no_promo = df[df.Category==category]['Price per volume'].mean()
+                price_no_promo = df[pd.to_numeric(df['Price per volume'], errors='coerce').notnull()][df.Category==category]['Price per volume'].mean()
             target ={
                 'Brand': brand,
                 'Category': category,
@@ -193,10 +194,6 @@ def attack_new_markets(
                 'std Price':(target.get('Price per volume')*1/100),
         }
 
-        print()
-        print(p)
-        print("\n\n\n")
-
         nb_samples_per_cat = len(df_sub_no_encoding[df_sub_no_encoding.Category == category])
         ten_per_cent = int(nb_samples_per_cat * 0.1)
         k = ten_per_cent if ten_per_cent >= 100 else 10
@@ -204,7 +201,6 @@ def attack_new_markets(
         p = pd.DataFrame(p, index=[0]).fillna(0.0)
 
         neighbors = neigh.kneighbors(p, k, return_distance=False)
-        print(neighbors)
         #neighbors = random.choices(neighbors[0], k=80)
         #p["Brand"] = b["Brand"]
         profile = build_profile(neighbors[0], df_sub, df, le_brand, le_cat, le_sub_cat)                         

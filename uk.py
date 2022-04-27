@@ -20,8 +20,8 @@ def main() -> None:
     data_manager.ad_hoc_UK(json_sell_out_params=json_sell_out_params)
     data_manager.fill_df_bel(json_sell_out_params=json_sell_out_params)
 
-    data_manager.get_df().to_excel(f"view/UK/{country}_df_{date.strftime('%d%m')}.xlsx", index=False)
-    data_manager.get_df_bel().to_excel(f"view/UK/{country}_df_bel_{date.strftime('%d%m')}.xlsx", index=False)
+    # data_manager.get_df().to_excel(f"view/UK/{country}_df_{date.strftime('%d%m')}.xlsx", index=False)
+    # data_manager.get_df_bel().to_excel(f"view/UK/{country}_df_bel_{date.strftime('%d%m')}.xlsx", index=False)
 
     model = Model()
 
@@ -50,9 +50,9 @@ def main() -> None:
         country=country,
         )
 
-    # attack_init_state.to_excel(
-    #     f"view/UK/{country}_attack_init_state_{date.strftime('%d%m')}.xlsx", index=False
-    # )
+    attack_init_state.to_excel(
+        f"view/UK/{country}_attack_init_state_{date.strftime('%d%m')}.xlsx", index=False
+    )
     
     capacity_to_win = Capacity_To_Win()
     (

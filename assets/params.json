@@ -141,7 +141,7 @@
          "source":"IRI",
          "date_max":"2022-01-01",
          "drop_levels":1,
-         "A&P_codes":["000AC - APERICUBE", "000BQ - BOURSIN", "000MB - MINI BABYBEL", "000LA - THE LAUGHING COW", "000KE - KIRI", "000PF - PORT SALUT", "000CJ - COUSTERON", "003NH - NURISHH"],
+         "A&P_codes":["000AC - APERICUBE", "000BQ - BOURSIN", "000MB - MINI BABYBEL", "000LA - THE LAUGHING COW", "000KE - KIRI", "000PF - PORT SALUT", "000CJ - COUSTERON", "003NH - NURISHH", "000BA - BABYBEL"],
          "A&P_columns":["YEAR EPM", "MANAGERIAL EPM", "CODE EPM", "R4100 - ADVERTISING", "R4200 - PROMOTION - CONSUMERS", "R1000 - NET SALES", "MVC - Margin on variable costs"],
          "finance_renaming_columns":["Year", "Country", "Brand", "Advertising", "Promotion", "Sell-in", "MVC"],
          "dates_finance":{"Min": "2017-12-31", "Max": "2021-12-26"},
@@ -827,10 +827,13 @@
        "brand scorecard":{
            "date_min":"2017-12-31",
            "awareness":{
-               "KIRI & STICK":85.000,
-               "KIRI BLOCK":85.000,
-               "KIRI PORTION":85.000,
-               "KIRI SPREAD":85.000
+                "VACHE QUI RIT":87,
+                "APERICUBE":59,
+                "MAREDSOUS":82,
+                "KIRI":76,
+                "BABYBEL":86,
+                "NURISHH":3,
+                "BOURSIN":84
            }
            
         },

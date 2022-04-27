@@ -165,10 +165,14 @@ class Capacity_To_Win():
                 .fillna(0.0)
             )
             mean_price_categories = (
-                df.groupby("Category", as_index=False)["Price per volume"]
-                .agg("mean")
+                df
+                [pd.to_numeric(df['Price per volume'], errors='coerce').notnull()]
                 .fillna(0.0)
+                .groupby("Category")["Price per volume"]
+                .agg("mean")
+                .reset_index()
             )
+
             brand_dict = dict()
             for brand in mean_price_brands.Brand.unique():
                 cat_dict = dict()
@@ -176,12 +180,9 @@ class Capacity_To_Win():
                     cat_dict[cat] = (
                         1
                         / abs(
-                            mean_price_brands[mean_price_brands.Brand == brand][
-                                "Price per volume"
-                            ].values
-                            - mean_price_categories[
-                                mean_price_categories.Category == cat
-                            ]["Price per volume"].values
+                            mean_price_brands[mean_price_brands.Brand == brand]["Price per volume"].values
+                            - 
+                            mean_price_categories[mean_price_categories.Category == cat]["Price per volume"].values
                         )[0]
                     )
                 brand_dict[brand] = cat_dict
@@ -189,16 +190,15 @@ class Capacity_To_Win():
 
         def compute_expertise(df, df_bel):
             # Expertise = Questionnaire Bel (Match between Brand on Market) = un truc random
-            df_expertise = pd.read_excel("data/JP/questionnaire.xlsx").set_index("Category")
+            df_expertise = pd.read_excel("data/CAN/questionnaire.xlsx").set_index("Category")
             #brands = df_bel.Brand.unique()
-            # categories = df.Category.unique()
             #categories = df.Category.unique()
-            # return pd.DataFrame(np.random.randint(0, 100, size=(len(categories), len(brands))), columns=brands, index=categories)
-            # return pd.DataFrame(
-            #     np.zeros((len(categories), len(brands))),
-            #     columns=brands,
-            #     index=categories,
-            # )
+            #return pd.DataFrame(np.random.randint(0, 100, size=(len(categories), len(brands))), columns=brands, index=categories)
+            #return pd.DataFrame(
+            #   np.zeros((len(categories), len(brands))),
+            #   columns=brands,
+            #   index=categories,
+            #)
             return df_expertise
 
         df_corr = compute_corr_table(df, df_bel, method="pearson")
@@ -302,8 +302,15 @@ class Capacity_To_Win():
             # )
 
         df_brand_scaled = scale_brand(df_brand)
+
+        ###FILTER DF
+        
+        #df_category = df_category[df_category.index.isin(["SPCLT AO SPCLT", "SPCLT CRUMBLED", "SPCLT FETA", "SPCLT FONDUE", "SPCLT FRESH MOZZ", "SPCLT FRESH TUB", "SPCLT GRILLING", "SPCLT PARMESAN TYPE", "SPCLT RACLETTE"])]
         df_category_scaled = scale_category(df_category)
 
+        #df_corr = df_corr[df_corr.index.isin(["SPCLT AO SPCLT", "SPCLT CRUMBLED", "SPCLT FETA", "SPCLT FONDUE", "SPCLT FRESH MOZZ", "SPCLT FRESH TUB", "SPCLT GRILLING", "SPCLT PARMESAN TYPE", "SPCLT RACLETTE"])]
+        #df_price = df_price[df_price.index.isin(["SPCLT AO SPCLT", "SPCLT CRUMBLED", "SPCLT FETA", "SPCLT FONDUE", "SPCLT FRESH MOZZ", "SPCLT FRESH TUB", "SPCLT GRILLING", "SPCLT PARMESAN TYPE", "SPCLT RACLETTE"])]
+        #df_expertise = df_expertise[df_expertise.index.isin(["SPCLT AO SPCLT", "SPCLT CRUMBLED", "SPCLT FETA", "SPCLT FONDUE", "SPCLT FRESH MOZZ", "SPCLT FRESH TUB", "SPCLT GRILLING", "SPCLT PARMESAN TYPE", "SPCLT RACLETTE"])]
         df_market_brand_scaled = scale_market_brand(df_corr, df_price, df_expertise)
         
         # coefs={"category": 16, "brand": 12, "fit": 6},
@@ -340,8 +347,8 @@ class Capacity_To_Win():
     def compute_Capacity_to_Win(self, df, df_bel, json_sell_out_params, country: str):
         df = df.copy()
         df_bel = df_bel.copy()
-        df["Date"] = pd.to_datetime(df["Date"], format="%Y-%m")
-        df_bel["Date"] = pd.to_datetime(df_bel["Date"], format="%Y-%m")
+        df["Date"] = pd.to_datetime(df["Date"], format="%Y-%m-%d")
+        df_bel["Date"] = pd.to_datetime(df_bel["Date"], format="%Y-%m-%d")
 
         YEAR_MIN = (
             json_sell_out_params.get(country).get("Capacity to Win").get("year_min")

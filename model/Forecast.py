@@ -553,9 +553,9 @@ class Forecast:
             )
             df = pd.merge(df, df_markets_or_compet, on="Date")
 
-        # pbar = tqdm(list(set(brands_name) - set(["NURISHH"])), ascii=True)
+        pbar = tqdm(list(set(brands_name) - set(["NURISHH"])), ascii=True)
         # pbar = tqdm(brands_name, ascii=True)
-        pbar = tqdm(["BOURSIN"], ascii=True)
+        # pbar = tqdm(["KIRI"], ascii=True)
         for brand in pbar:
             all_features = features + brands_cat[brand]
             pbar.set_description(f"Brands|{brand}")
@@ -581,6 +581,7 @@ class Forecast:
             )
 
             df_fcst_std = pd.DataFrame()
+            df_fcst_std.loc[:, ["ds"]] = df_fcst[["ds"]]
             if model_name == "orbit":
                 if logistic:
                     # model = DLT(
@@ -639,7 +640,7 @@ class Forecast:
                 # Prophet
                 # A model for each brand
                 df_fcst_std["cap"] = df_fcst.y.max() * 5
-                df_fcst_std["floor"] = df_fcst.y.min() / 3
+                df_fcst_std["floor"] = df_fcst.y.min() / 2
 
                 if logistic:
                     model = Prophet(
@@ -669,11 +670,11 @@ class Forecast:
 
             # Apply standard scaler to features
             model_std = StandardScaler()
-            df_fcst_std.loc[:, ["ds", "y"]] = df_fcst[["ds", "y"]]
+            df_fcst_std.loc[:, ["y"]] = df_fcst[["y"]]
             df_fcst_std.loc[:, all_features] = model_std.fit_transform(
                 df_fcst[all_features]
             )
-
+            print(df_fcst_std)
             model.fit(df_fcst_std)
             # print(model.get_regression_coefs())
             last_year_sales = df_bel_brand[
@@ -725,8 +726,8 @@ class Forecast:
                     df_scenario_std["floor"] = df_fcst_std["floor"].iloc[0]
 
                     fcst = model.predict(df_scenario_std)
-                    fcst["yhat"] = fcst.yhat.apply(lambda x: 0 if x < 0 else x)
-
+                
+                fcst["yhat"] = fcst.yhat.apply(lambda x: 0 if x < 0 else x)
                 df_scenario["Sales in volume"] = fcst["yhat"]
 
                 for k, v in zip(features, scenario):

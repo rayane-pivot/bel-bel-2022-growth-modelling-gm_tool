@@ -1,7 +1,7 @@
 import json
 
 import pandas as pd
-
+import datetime as dt
 from datamanager.DM_USA import DM_USA
 from model.M_USA import M_USA
 
@@ -13,6 +13,7 @@ def main():
     with open(PATH_TO_PARAMS, "r") as f:
         json_sell_out_params = json.load(f)
     country = "USA"
+    date = dt.datetime.now()
     data_manager = DM_USA()
     data_manager.ad_hoc_USA(json_sell_out_params)
     data_manager.fill_df_bel(json_sell_out_params)
@@ -42,7 +43,8 @@ def main():
     brand_positioning_matrix = model.compute_brand_positioning_matrix(
         data_manager.get_df(), year_min=year_min, year1=year1, year2=year2
     )
-    #brand_positioning_matrix.to_excel(PATH_TO_OUTPUTS + 'USA_brand_positioning_matrix_0903.xlsx')
+    # brand_positioning_matrix.to_excel(PATH_TO_OUTPUTS + 'USA_brand_positioning_matrix_0903.xlsx')
+    brand_positioning_matrix.to_excel(f'view/USA/USA_brand_positioning_matrix_{date.strftime("%d%m")}.xlsx')
 
     brand_scorecard = model.compute_brand_scorecard(
         data_manager.get_df(),

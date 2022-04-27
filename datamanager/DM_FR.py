@@ -70,28 +70,39 @@ class DM_FR(DataManager):
             df.Date = pd.to_datetime(df.Date)
             df.Date = df.Date.dt.strftime("%Y-%m-%d")
             bel_brands = json_sell_out_params.get(self._country).get("bel_brands")
+            # df_bel = (
+            #     df[df.Brand.isin(bel_brands)]
+            #     .groupby(["Date", "Brand"], as_index=False)[
+            #         [
+            #             "Price per volume",
+            #             "Sales in volume",
+            #             "Sales in value",
+            #             "Sales volume with promo",
+            #             "Distribution",
+            #         ]
+            #     ]
+            #     .agg(
+            #         {
+            #             "Price per volume": "mean",
+            #             "Sales in volume": "sum",
+            #             "Sales in value": "sum",
+            #             "Sales volume with promo":"sum",
+            #             "Distribution": "mean",
+            #         }
+            #     )
+            # )
             df_bel = (
-                df[df.Brand.isin(bel_brands)]
-                .groupby(["Date", "Brand"], as_index=False)[
-                    [
-                        "Price per volume",
-                        "Sales in volume",
-                        "Sales in value",
-                        "Sales volume with promo",
-                        "Distribution",
-                    ]
-                ]
-                .agg(
-                    {
-                        "Price per volume": "mean",
-                        "Sales in volume": "sum",
-                        "Sales in value": "sum",
-                        "Sales volume with promo":"sum",
-                        "Distribution": "mean",
-                    }
-                )
+                df
+                [df.Brand.isin(bel_brands)]
+                .groupby(["Date", "Brand"], as_index=False)
+                .apply(lambda group: pd.Series({
+                        "Price per volume": (group["Price per volume"] * group["Sales in volume"]).sum()/group["Sales in volume"].sum(),
+                        "Sales in volume": group["Sales in volume"].sum(),
+                        "Sales in value": group["Sales in value"].sum(),
+                        "Sales volume with promo":group["Sales volume with promo"].sum(),
+                        "Distribution": (group["Distribution"] * group["Sales in volume"]).sum()/group["Sales in volume"].sum(),
+                }))
             )
-
             df_bel["Promo Cost"] = df_bel["Sales volume with promo"] / df_bel["Sales in volume"]
 
             PATH_FINANCE = (
